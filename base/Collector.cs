@@ -1,4 +1,6 @@
-﻿namespace l99.driver.@base
+﻿using System.Threading.Tasks;
+
+namespace l99.driver.@base
 {
     public class Collector
     {
@@ -16,10 +18,20 @@
         {
             
         }
+        
+        public virtual async Task InitializeAsync()
+        {
+            Task.Yield();
+        }
 
         public virtual void Collect()
         {
             
+        }
+        
+        public virtual async Task CollectAsync()
+        {
+            Task.Yield();
         }
     }
 }

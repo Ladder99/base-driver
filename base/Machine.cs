@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace l99.driver.@base
 {
@@ -121,9 +122,17 @@ namespace l99.driver.@base
         }
         
         protected Collector _collector;
+
+        public int SweepMs
+        {
+            get => _sweepMs;
+        }
+        
+        protected int _sweepMs;
         
         public void AddCollector(Type type, int sweepMs = 1000)
         {
+            _sweepMs = sweepMs;
             Console.WriteLine($"creating collector: {type.FullName}");
             _collector = (Collector) Activator.CreateInstance(type, new object[] { this, sweepMs });
         }
@@ -132,10 +141,20 @@ namespace l99.driver.@base
         {
             _collector.Initialize();
         }
+        
+        public async Task InitCollectorAsync()
+        {
+            await _collector.InitializeAsync();
+        }
 
         public void RunCollector()
         {
             _collector.Collect();
+        }
+        
+        public async Task RunCollectorAsync()
+        {
+            await _collector.CollectAsync();
         }
         
         #endregion

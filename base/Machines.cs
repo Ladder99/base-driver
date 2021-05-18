@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MoreLinq;
 
 namespace l99.driver.@base
 {
@@ -75,6 +76,28 @@ namespace l99.driver.@base
             }
         }
         
-        
+        public async Task RunAsync()
+        {
+            List<Task> tasks = new List<Task>();
+
+            foreach (var machine in _machines.Where(x => x.Enabled))
+            {
+                tasks.Add(runMachineAsync(machine));
+            }
+
+            await Task.WhenAll(tasks);
+        }
+
+        async Task runMachineAsync(Machine machine)
+        {
+            await machine.InitCollectorAsync();
+
+            while (true)
+            {
+                await Task.Delay(machine.SweepMs).ConfigureAwait(false);
+                await machine.RunCollectorAsync();
+                await machine.Handler.OnCollectorSweepCompleteInternalAsync();
+            }
+        }
     }
 }
