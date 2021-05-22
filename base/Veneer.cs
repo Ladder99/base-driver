@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace l99.driver.@base
@@ -80,11 +81,11 @@ namespace l99.driver.@base
 
         protected bool _isFirstCall = true;
         
-        public Action<Veneer> OnError = (veneer) => { };
+        public Func<Veneer, Task> OnErrorAsync = async (veneer) => { await Task.Yield(); };
 
-        public Action<Veneer> OnChange =  (veneer) => { };
+        public Func<Veneer, Task> OnChangeAsync =  async (veneer) => { await Task.Yield(); };
         
-        public Action<Veneer> OnArrival =  (veneer) => { };
+        public Func<Veneer, Task> OnArrivalAsync =  async (veneer) => { await Task.Yield(); };
         
         public Veneer(string name = "", bool isInternal = false)
         {
@@ -93,27 +94,27 @@ namespace l99.driver.@base
             _stopwatchDataChange.Start();
         }
         
-        protected void onDataArrived(dynamic input, dynamic current_value)
+        protected async Task onDataArrivedAsync(dynamic input, dynamic current_value)
         {
             this._lastArrivedInput = input;
             this._lastArrivedValue = current_value;
-            this.OnArrival(this);
+            await this.OnArrivalAsync(this);
             _stopwatchDataArrival.Restart();
         }
         
-        protected void onDataChanged(dynamic input, dynamic current_value)
+        protected async Task onDataChangedAsync(dynamic input, dynamic current_value)
         {
             this._lastChangedInput = input;
             this._lastChangedValue = current_value;
-            this.OnChange(this);
+            await this.OnChangeAsync(this);
             _stopwatchDataChange.Restart();
         }
 
-        protected void onError(dynamic input)
+        protected async Task onErrorAsync(dynamic input)
         {
             this._lastArrivedInput = input;
             // TODO: overwrite last arrived value?
-            this.OnError(this);
+            await this.OnErrorAsync(this);
         }
 
         public void SetSliceKey(dynamic? sliceKey)
@@ -127,26 +128,27 @@ namespace l99.driver.@base
             _hasMarker = true;
         }
         
-        protected virtual dynamic First(dynamic input, dynamic? input2)
+        protected virtual async Task<dynamic> FirstAsync(dynamic input, dynamic? input2)
         {
-            return Any(input, input2);
+            return await AnyAsync(input, input2);
         }
 
-        protected virtual dynamic Any(dynamic input, dynamic? input2)
+        protected virtual async Task<dynamic> AnyAsync(dynamic input, dynamic? input2)
         {
+            await Task.Yield();
             return new { };
         }
 
-        public dynamic Peel(dynamic input, dynamic? input2)
+        public async Task<dynamic> PeelAsync(dynamic input, dynamic? input2)
         {
             if(_isFirstCall)
             {
                 _isFirstCall = false;
-                return this.First(input, input2);
+                return await this.FirstAsync(input, input2);
             }
             else
             {
-                return this.Any(input, input2);
+                return await this.AnyAsync(input, input2);
             }
         }
     }

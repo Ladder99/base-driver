@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
@@ -39,15 +40,15 @@ namespace l99.driver.@base.mqtt
             _client = factory.CreateMqttClient();
         }
 
-        public void Connect()
+        public async Task ConnectAsync()
         {
             if (MQTT_CONNECT)
             {
-                var r = _client.ConnectAsync(_options, CancellationToken.None).Result;
+                await _client.ConnectAsync(_options, CancellationToken.None);
             }
         }
 
-        public void Publish(string topic, string payload, bool retained = true)
+        public async Task PublishAsync(string topic, string payload, bool retained = true)
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} PUB {payload.Length}b => {topic}");
@@ -60,19 +61,19 @@ namespace l99.driver.@base.mqtt
                     .WithPayload(payload)
                     .Build();
                 
-                var r = _client.PublishAsync(msg, CancellationToken.None);
+                await _client.PublishAsync(msg, CancellationToken.None);
             }
         }
         
-        public void PublishArrivalStatus(string topic, string payload, bool retained = true)
+        public async Task PublishArrivalStatusAsync(string topic, string payload, bool retained = true)
         {
             if (MQTT_CONNECT && MQTT_PUBLISH_STATUS)
             {
-                PublishArrival(topic, payload, retained);
+                await PublishArrival(topic, payload, retained);
             }
         }
 
-        public void PublishArrival(string topic, string payload, bool retained = true)
+        public async Task PublishArrival(string topic, string payload, bool retained = true)
         {
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} ARRIVE {payload.Length}b => {topic}");
@@ -85,19 +86,19 @@ namespace l99.driver.@base.mqtt
                     .WithPayload(payload)
                     .Build();
                 
-                var r = _client.PublishAsync(msg, CancellationToken.None);
+                await _client.PublishAsync(msg, CancellationToken.None);
             }
         }
         
-        public void PublishChangeStatus(string topic, string payload, bool retained = true)
+        public async Task PublishChangeStatusAsync(string topic, string payload, bool retained = true)
         {
             if (MQTT_CONNECT && MQTT_PUBLISH_STATUS)
             {
-                PublishChange(topic, payload, retained);
+                await PublishChangeAsync(topic, payload, retained);
             }
         }
         
-        public void PublishChange(string topic, string payload, bool retained = true)
+        public async Task PublishChangeAsync(string topic, string payload, bool retained = true)
         {
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} CHANGE {payload.Length}b => {topic}");
@@ -110,7 +111,7 @@ namespace l99.driver.@base.mqtt
                     .WithPayload(payload)
                     .Build();
                 
-                var r = _client.PublishAsync(msg, CancellationToken.None);
+                await _client.PublishAsync(msg, CancellationToken.None);
             }
         }
         

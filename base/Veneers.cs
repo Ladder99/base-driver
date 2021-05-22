@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace l99.driver.@base
@@ -15,11 +17,11 @@ namespace l99.driver.@base
         
         private Machine _machine;
 
-        public Action<Veneers, Veneer> OnDataArrival = (vv, v) => { };
+        public Func<Veneers, Veneer, Task> OnDataArrivalAsync = async (vv, v) => { await Task.Yield(); };
         
-        public Action<Veneers, Veneer> OnDataChange = (vv, v) => { };
+        public Func<Veneers, Veneer, Task> OnDataChangeAsync = async (vv, v) => { await Task.Yield(); };
         
-        public Action<Veneers, Veneer> OnError = (vv, v) => { };
+        public Func<Veneers, Veneer, Task> OnErrorAsync = async (vv, v) => { await Task.Yield(); };
         
         private string SPLIT_SEP = "/";
         
@@ -51,9 +53,9 @@ namespace l99.driver.@base
         public void Add(Type veneerType, string name, bool isInternal = false)
         {
             Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isInternal });
-            veneer.OnArrival = (v) => OnDataArrival(this, v);
-            veneer.OnChange = (v) => OnDataChange(this, v);
-            veneer.OnError = (v) => OnError(this, v);
+            veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
+            veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
+            veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
             _wholeVeneers.Add(veneer);
         }
 
@@ -63,9 +65,9 @@ namespace l99.driver.@base
             {
                 Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isInternal });
                 veneer.SetSliceKey(key);
-                veneer.OnArrival = (v) => OnDataArrival(this, v);
-                veneer.OnChange = (v) => OnDataChange(this, v);
-                veneer.OnError = (v) => OnError(this, v);
+                veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
+                veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
+                veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
                 _slicedVeneers[key].Add(veneer);
             }
         }
@@ -80,19 +82,19 @@ namespace l99.driver.@base
                 
                 Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isInternal });
                 veneer.SetSliceKey(key);
-                veneer.OnArrival = (v) => OnDataArrival(this, v);
-                veneer.OnChange = (v) => OnDataChange(this, v);
-                veneer.OnError = (v) => OnError(this, v);
+                veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
+                veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
+                veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
                 _slicedVeneers[key].Add(veneer);
             }
         }
 
-        public dynamic Peel(string name, dynamic input, dynamic? input2)
+        public async Task<dynamic> PeelAsync(string name, dynamic input, dynamic? input2)
         {
-            return _wholeVeneers.FirstOrDefault(v => v.Name == name).Peel(input, input2);
+            return await _wholeVeneers.FirstOrDefault(v => v.Name == name).PeelAsync(input, input2);
         }
         
-        public dynamic PeelAcross(dynamic split, string name, dynamic input, dynamic? input2)
+        public async Task<dynamic> PeelAcrossAsync(dynamic split, string name, dynamic input, dynamic? input2)
         {
             foreach (var key in _slicedVeneers.Keys)
             {
@@ -109,12 +111,13 @@ namespace l99.driver.@base
                     {
                         if (veneer.Name == name)
                         {
-                            return veneer.Peel(input, input2);
+                            return await veneer.PeelAsync(input, input2);
                         }
                     }
                 }
             }
 
+            await Task.Yield();
             return new { };
         }
 

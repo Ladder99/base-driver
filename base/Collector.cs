@@ -14,24 +14,14 @@ namespace l99.driver.@base
             _sweepMs = sweepMs;
         }
 
-        public virtual void Initialize()
-        {
-            
-        }
-        
         public virtual async Task InitializeAsync()
         {
-            Task.Yield();
+            await Task.Yield();
         }
 
-        public virtual void Collect()
-        {
-            
-        }
-        
         public virtual async Task CollectAsync()
         {
-            Task.Yield();
+            await Task.Yield();
         }
     }
 }

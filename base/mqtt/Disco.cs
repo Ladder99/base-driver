@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using MQTTnet;
-using MQTTnet.Client;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace l99.driver.@base.mqtt
@@ -25,7 +23,7 @@ namespace l99.driver.@base.mqtt
             
         }
 
-        public void Add(string machineId, Broker broker)
+        public async Task AddAsync(string machineId, Broker broker)
         {
             if (!_items.ContainsKey(machineId))
             {
@@ -47,7 +45,7 @@ namespace l99.driver.@base.mqtt
 
             string topic = "fanuc/DISCO";
             string payload = JObject.FromObject(_items).ToString();
-            broker.Publish(topic, payload);
+            await broker.PublishAsync(topic, payload);
         }
     }
 }

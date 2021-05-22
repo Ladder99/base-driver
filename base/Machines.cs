@@ -57,25 +57,6 @@ namespace l99.driver.@base
             return machine;
         }
 
-        public void Run()
-        {
-            foreach (var machine in _machines.Where(x => x.Enabled))
-            {
-                machine.InitCollector();
-            }
-
-            while (true)
-            {
-                Thread.Sleep(_collectionInterval);
-
-                foreach (var machine in _machines.Where(x => x.Enabled))
-                {
-                    machine.RunCollector();
-                    machine.Handler.OnCollectorSweepCompleteInternal();
-                }
-            }
-        }
-        
         public async Task RunAsync()
         {
             List<Task> tasks = new List<Task>();

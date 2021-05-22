@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace l99.driver.@base.mqtt
 {
@@ -11,7 +12,7 @@ namespace l99.driver.@base.mqtt
             _brokers = new Dictionary<string, Broker>();
         }
 
-        public Broker Add(dynamic cfg)
+        public async Task<Broker> AddAsync(dynamic cfg)
         {
             var key = cfg.ip + ":" + cfg.port;
 
@@ -22,7 +23,7 @@ namespace l99.driver.@base.mqtt
             else
             {
                 Broker broker = new Broker(cfg);
-                broker.Connect();
+                await broker.ConnectAsync();
                 _brokers.Add(key, broker);
                 return broker;
             }

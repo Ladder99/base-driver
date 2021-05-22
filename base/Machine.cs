@@ -97,14 +97,14 @@ namespace l99.driver.@base
         
         protected Handler _handler;
         
-        public void AddHandler(Type type)
+        public async Task AddHandlerAsync(Type type)
         {
             Console.WriteLine($"creating handler: {type.FullName}");
             _handler = (Handler) Activator.CreateInstance(type, new object[] { this });
-            _handler.Initialize();
-            _veneers.OnDataArrival = _handler.OnDataArrivalInternal;
-            _veneers.OnDataChange = _handler.OnDataChangeInternal;
-            _veneers.OnError = _handler.OnErrorInternal;
+            await _handler.InitializeAsync();
+            _veneers.OnDataArrivalAsync = _handler.OnDataArrivalInternalAsync;
+            _veneers.OnDataChangeAsync = _handler.OnDataChangeInternalAsync;
+            _veneers.OnErrorAsync = _handler.OnErrorInternalAsync;
         }
         
         #endregion
@@ -137,21 +137,11 @@ namespace l99.driver.@base
             _collector = (Collector) Activator.CreateInstance(type, new object[] { this, sweepMs });
         }
 
-        public void InitCollector()
-        {
-            _collector.Initialize();
-        }
-        
         public async Task InitCollectorAsync()
         {
             await _collector.InitializeAsync();
         }
 
-        public void RunCollector()
-        {
-            _collector.Collect();
-        }
-        
         public async Task RunCollectorAsync()
         {
             await _collector.CollectAsync();
@@ -202,14 +192,14 @@ namespace l99.driver.@base
             _veneers.AddAcrossSlices(sliceKey, type, name, isInternal);
         }
 
-        public dynamic PeelVeneer(string name, dynamic input, dynamic? input2 = null)
+        public async Task<dynamic> PeelVeneer(string name, dynamic input, dynamic? input2 = null)
         {
-            return _veneers.Peel(name, input, input2);
+            return await _veneers.PeelAsync(name, input, input2);
         }
         
-        public dynamic PeelAcrossVeneer(dynamic split, string name, dynamic input, dynamic? input2 = null)
+        public async Task<dynamic> PeelAcrossVeneer(dynamic split, string name, dynamic input, dynamic? input2 = null)
         {
-            return _veneers.PeelAcross(split, name, input, input2);
+            return await _veneers.PeelAcrossAsync(split, name, input, input2);
         }
 
         public void MarkVeneer(dynamic split, dynamic marker)
