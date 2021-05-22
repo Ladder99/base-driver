@@ -16,12 +16,12 @@ namespace l99.driver.@base
 
         public virtual async Task InitializeAsync()
         {
-            await Task.Yield();
+            
         }
 
         public virtual async Task CollectAsync()
         {
-            await Task.Yield();
+            
         }
     }
 }

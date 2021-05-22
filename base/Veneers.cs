@@ -17,11 +17,11 @@ namespace l99.driver.@base
         
         private Machine _machine;
 
-        public Func<Veneers, Veneer, Task> OnDataArrivalAsync = async (vv, v) => { await Task.Yield(); };
+        public Func<Veneers, Veneer, Task> OnDataArrivalAsync = async (vv, v) => {  };
         
-        public Func<Veneers, Veneer, Task> OnDataChangeAsync = async (vv, v) => { await Task.Yield(); };
+        public Func<Veneers, Veneer, Task> OnDataChangeAsync = async (vv, v) => {  };
         
-        public Func<Veneers, Veneer, Task> OnErrorAsync = async (vv, v) => { await Task.Yield(); };
+        public Func<Veneers, Veneer, Task> OnErrorAsync = async (vv, v) => {  };
         
         private string SPLIT_SEP = "/";
         
@@ -117,7 +117,7 @@ namespace l99.driver.@base
                 }
             }
 
-            await Task.Yield();
+            
             return new { };
         }
 

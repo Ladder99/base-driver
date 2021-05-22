@@ -81,11 +81,11 @@ namespace l99.driver.@base
 
         protected bool _isFirstCall = true;
         
-        public Func<Veneer, Task> OnErrorAsync = async (veneer) => { await Task.Yield(); };
+        public Func<Veneer, Task> OnErrorAsync = async (veneer) => {  };
 
-        public Func<Veneer, Task> OnChangeAsync =  async (veneer) => { await Task.Yield(); };
+        public Func<Veneer, Task> OnChangeAsync =  async (veneer) => {  };
         
-        public Func<Veneer, Task> OnArrivalAsync =  async (veneer) => { await Task.Yield(); };
+        public Func<Veneer, Task> OnArrivalAsync =  async (veneer) => {  };
         
         public Veneer(string name = "", bool isInternal = false)
         {
@@ -135,7 +135,7 @@ namespace l99.driver.@base
 
         protected virtual async Task<dynamic> AnyAsync(dynamic input, dynamic? input2)
         {
-            await Task.Yield();
+            
             return new { };
         }
 

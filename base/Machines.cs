@@ -75,7 +75,7 @@ namespace l99.driver.@base
 
             while (true)
             {
-                await Task.Delay(machine.SweepMs).ConfigureAwait(false);
+                await Task.Delay(machine.SweepMs);
                 await machine.RunCollectorAsync();
                 await machine.Handler.OnCollectorSweepCompleteInternalAsync();
             }

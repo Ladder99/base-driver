@@ -192,12 +192,12 @@ namespace l99.driver.@base
             _veneers.AddAcrossSlices(sliceKey, type, name, isInternal);
         }
 
-        public async Task<dynamic> PeelVeneer(string name, dynamic input, dynamic? input2 = null)
+        public async Task<dynamic> PeelVeneerAsync(string name, dynamic input, dynamic? input2 = null)
         {
             return await _veneers.PeelAsync(name, input, input2);
         }
         
-        public async Task<dynamic> PeelAcrossVeneer(dynamic split, string name, dynamic input, dynamic? input2 = null)
+        public async Task<dynamic> PeelAcrossVeneerAsync(dynamic split, string name, dynamic input, dynamic? input2 = null)
         {
             return await _veneers.PeelAcrossAsync(split, name, input, input2);
         }

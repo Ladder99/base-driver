@@ -69,11 +69,11 @@ namespace l99.driver.@base.mqtt
         {
             if (MQTT_CONNECT && MQTT_PUBLISH_STATUS)
             {
-                await PublishArrival(topic, payload, retained);
+                await PublishArrivalAsync(topic, payload, retained);
             }
         }
 
-        public async Task PublishArrival(string topic, string payload, bool retained = true)
+        public async Task PublishArrivalAsync(string topic, string payload, bool retained = true)
         {
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} ARRIVE {payload.Length}b => {topic}");
