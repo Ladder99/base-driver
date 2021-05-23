@@ -5,13 +5,15 @@ using System.Threading.Tasks;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
+using MQTTnet.Exceptions;
+using NLog;
 
 namespace l99.driver.@base.mqtt
 {
     public class Broker
     {
+        private ILogger _logger;
         private dynamic _options;
-            
         private IMqttClient _client;
 
         public IMqttClient Client
@@ -26,6 +28,7 @@ namespace l99.driver.@base.mqtt
 
         public Broker(dynamic cfg)
         {
+            _logger = LogManager.GetCurrentClassLogger();
             _propertyBag = new Dictionary<string, dynamic>();
             
             MQTT_CONNECT = cfg.enabled;
@@ -44,16 +47,27 @@ namespace l99.driver.@base.mqtt
         {
             if (MQTT_CONNECT)
             {
-                await _client.ConnectAsync(_options, CancellationToken.None);
+                _logger.Debug($"Connecting broker: {_options.ChannelOptions}");
+                try
+                {
+                    await _client.ConnectAsync(_options, CancellationToken.None);
+                }
+                catch (MqttCommunicationException ex)
+                {
+                    _logger.Warn(ex,$"Broker connection failed: {_options.ChannelOptions}");
+                }
+            }
+            else
+            {
+                _logger.Info($"Skipping broker connection: {_options.ChannelOptions}");
             }
         }
 
         public async Task PublishAsync(string topic, string payload, bool retained = true)
         {
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} PUB {payload.Length}b => {topic}");
-
-            if (MQTT_CONNECT)
+            _logger.Trace($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} PUB {payload.Length}b => {topic}\n{payload}");
+            
+            if (MQTT_CONNECT && _client.IsConnected)
             {
                 var msg = new MqttApplicationMessageBuilder()
                     .WithRetainFlag(retained)
@@ -67,7 +81,7 @@ namespace l99.driver.@base.mqtt
         
         public async Task PublishArrivalStatusAsync(string topic, string payload, bool retained = true)
         {
-            if (MQTT_CONNECT && MQTT_PUBLISH_STATUS)
+            if (MQTT_CONNECT && MQTT_PUBLISH_STATUS && _client.IsConnected)
             {
                 await PublishArrivalAsync(topic, payload, retained);
             }
@@ -75,10 +89,9 @@ namespace l99.driver.@base.mqtt
 
         public async Task PublishArrivalAsync(string topic, string payload, bool retained = true)
         {
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} ARRIVE {payload.Length}b => {topic}");
-
-            if (MQTT_CONNECT && MQTT_PUBLISH_ARRIVALS)
+            _logger.Trace($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} ARRIVE {payload.Length}b => {topic}\n{payload}");
+            
+            if (MQTT_CONNECT && MQTT_PUBLISH_ARRIVALS && _client.IsConnected)
             {
                 var msg = new MqttApplicationMessageBuilder()
                     .WithRetainFlag(retained)
@@ -92,7 +105,7 @@ namespace l99.driver.@base.mqtt
         
         public async Task PublishChangeStatusAsync(string topic, string payload, bool retained = true)
         {
-            if (MQTT_CONNECT && MQTT_PUBLISH_STATUS)
+            if (MQTT_CONNECT && MQTT_PUBLISH_STATUS && _client.IsConnected)
             {
                 await PublishChangeAsync(topic, payload, retained);
             }
@@ -100,10 +113,9 @@ namespace l99.driver.@base.mqtt
         
         public async Task PublishChangeAsync(string topic, string payload, bool retained = true)
         {
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} CHANGE {payload.Length}b => {topic}");
+            _logger.Trace($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} CHANGE {payload.Length}b => {topic}\n{payload}");
             
-            if (MQTT_CONNECT && MQTT_PUBLISH_CHANGES)
+            if (MQTT_CONNECT && MQTT_PUBLISH_CHANGES && _client.IsConnected)
             {
                 var msg = new MqttApplicationMessageBuilder()
                     .WithRetainFlag(retained)

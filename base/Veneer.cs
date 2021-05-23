@@ -2,11 +2,14 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace l99.driver.@base
 {
     public class Veneer
     {
+        protected ILogger _logger;
+        
         public string Name
         {
             get { return _name; }
@@ -89,6 +92,7 @@ namespace l99.driver.@base
         
         public Veneer(string name = "", bool isInternal = false)
         {
+            _logger = LogManager.GetLogger(this.GetType().FullName);
             _name = name;
             _isInternal = isInternal;
             _stopwatchDataChange.Start();
@@ -96,6 +100,7 @@ namespace l99.driver.@base
         
         protected async Task onDataArrivedAsync(dynamic input, dynamic current_value)
         {
+            _logger.Trace($"[{_name}] Veneer arrival invocation result:\n{JObject.FromObject(current_value).ToString()}");
             this._lastArrivedInput = input;
             this._lastArrivedValue = current_value;
             await this.OnArrivalAsync(this);
@@ -104,6 +109,7 @@ namespace l99.driver.@base
         
         protected async Task onDataChangedAsync(dynamic input, dynamic current_value)
         {
+            _logger.Trace($"[{_name}] Veneer change invocation result:\n{JObject.FromObject(current_value).ToString()}");
             this._lastChangedInput = input;
             this._lastChangedValue = current_value;
             await this.OnChangeAsync(this);
@@ -112,6 +118,7 @@ namespace l99.driver.@base
 
         protected async Task onErrorAsync(dynamic input)
         {
+            _logger.Info($"[{_name}] Veneer error invocation result:\n{JObject.FromObject(input).ToString()}");
             this._lastArrivedInput = input;
             // TODO: overwrite last arrived value?
             await this.OnErrorAsync(this);

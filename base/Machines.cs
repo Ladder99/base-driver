@@ -4,11 +4,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MoreLinq;
+using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace l99.driver.@base
 {
     public class Machines
     {
+        private ILogger _logger;
+        
         private List<Machine> _machines;
         
         private Dictionary<string, dynamic> _propertyBag;
@@ -17,6 +21,7 @@ namespace l99.driver.@base
 
         public Machines(int collectionInterval = 1000)
         {
+            _logger = LogManager.GetCurrentClassLogger();
             _collectionInterval = collectionInterval;
             _machines = new List<Machine>();
             _propertyBag = new Dictionary<string, dynamic>();
@@ -51,7 +56,7 @@ namespace l99.driver.@base
         
         public Machine Add(dynamic cfg)
         {
-            //var machine = new Machine(this, cfg.enabled, cfg.id, cfg);
+            _logger.Debug($"Adding machine:\n{JObject.FromObject(cfg).ToString()}");
             var machine = (Machine) Activator.CreateInstance(Type.GetType(cfg.type), new object[] { this, cfg.enabled, cfg.id, cfg });
             _machines.Add(machine);
             return machine;
@@ -65,7 +70,8 @@ namespace l99.driver.@base
             {
                 tasks.Add(runMachineAsync(machine));
             }
-
+            
+            _logger.Info("Machine tasks running...");
             await Task.WhenAll(tasks);
         }
 

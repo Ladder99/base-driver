@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using NLog;
 
 namespace l99.driver.@base
 {
     public abstract class Machine
     {
+        private ILogger _logger;
+        
         public override string ToString()
         {
             return new
@@ -48,6 +51,7 @@ namespace l99.driver.@base
         
         public Machine(Machines machines, bool enabled, string id, dynamic config)
         {
+            _logger = LogManager.GetCurrentClassLogger();
             _machines = machines;
             _enabled = enabled;
             _id = id;
@@ -99,7 +103,7 @@ namespace l99.driver.@base
         
         public async Task AddHandlerAsync(Type type)
         {
-            Console.WriteLine($"creating handler: {type.FullName}");
+            _logger.Debug($"[{_id}] Creating handler: {type.FullName}");
             _handler = (Handler) Activator.CreateInstance(type, new object[] { this });
             await _handler.InitializeAsync();
             _veneers.OnDataArrivalAsync = _handler.OnDataArrivalInternalAsync;
@@ -133,12 +137,13 @@ namespace l99.driver.@base
         public void AddCollector(Type type, int sweepMs = 1000)
         {
             _sweepMs = sweepMs;
-            Console.WriteLine($"creating collector: {type.FullName}");
+            _logger.Debug($"[{_id}] Creating collector: {type.FullName}");
             _collector = (Collector) Activator.CreateInstance(type, new object[] { this, sweepMs });
         }
 
         public async Task InitCollectorAsync()
         {
+            _logger.Debug($"[{_id}] Initializing collector...");
             await _collector.InitializeAsync();
         }
 
@@ -166,7 +171,7 @@ namespace l99.driver.@base
 
         public void ApplyVeneer(Type type, string name, bool isInternal = false)
         {
-            Console.WriteLine($"applying veneer: {type.FullName}");
+            _logger.Debug($"[{_id}] Applying veneer: {type.FullName}");
             _veneers.Add(type, name, isInternal);
         }
 
@@ -182,13 +187,13 @@ namespace l99.driver.@base
 
         public void ApplyVeneerAcrossSlices(Type type, string name, bool isInternal = false)
         {
-            Console.WriteLine($"applying veneer: {type.FullName}");
+            _logger.Debug($"[{_id}] Applying veneer: {type.FullName}");
             _veneers.AddAcrossSlices(type, name, isInternal);
         }
         
         public void ApplyVeneerAcrossSlices(dynamic sliceKey, Type type, string name, bool isInternal = false)
         {
-            Console.WriteLine($"applying veneer: {type.FullName}");
+            _logger.Debug($"[{_id}] Applying veneer: {type.FullName}");
             _veneers.AddAcrossSlices(sliceKey, type, name, isInternal);
         }
 

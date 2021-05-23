@@ -1,14 +1,18 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace l99.driver.@base.mqtt
 {
     public class Brokers
     {
+        private ILogger _logger;
         private Dictionary<string, Broker> _brokers;
             
         public Brokers()
         {
+            _logger = LogManager.GetCurrentClassLogger();
             _brokers = new Dictionary<string, Broker>();
         }
 
@@ -22,6 +26,7 @@ namespace l99.driver.@base.mqtt
             }
             else
             {
+                _logger.Debug($"Adding broker:\n{JObject.FromObject(cfg).ToString()}");
                 Broker broker = new Broker(cfg);
                 await broker.ConnectAsync();
                 _brokers.Add(key, broker);
