@@ -17,14 +17,22 @@ namespace l99.driver.@base
             _sweepMs = sweepMs;
         }
 
-        public virtual async Task InitializeAsync()
+        public virtual async Task<dynamic?> InitializeAsync()
         {
-            
+            return null;
         }
 
-        public virtual async Task CollectAsync()
+        public virtual async Task<dynamic?> CollectAsync()
         {
-            
+            return null;
+        }
+
+        public virtual async Task SweepAsync(int delayMs = -1)
+        {
+            delayMs = delayMs < 0 ? _sweepMs : delayMs;
+            await Task.Delay(delayMs);
+            await CollectAsync();
+            await _machine.Handler.OnCollectorSweepCompleteInternalAsync();
         }
     }
 }

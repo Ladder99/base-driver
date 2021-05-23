@@ -18,7 +18,9 @@ namespace l99.driver.@base
         private Dictionary<string, dynamic> _propertyBag;
 
         private int _collectionInterval;
-
+        
+        private bool _isRunning = true;
+        
         public Machines(int collectionInterval = 1000)
         {
             _logger = LogManager.GetCurrentClassLogger();
@@ -79,11 +81,9 @@ namespace l99.driver.@base
         {
             await machine.InitCollectorAsync();
 
-            while (true)
+            while (_isRunning)
             {
-                await Task.Delay(machine.SweepMs);
                 await machine.RunCollectorAsync();
-                await machine.Handler.OnCollectorSweepCompleteInternalAsync();
             }
         }
     }

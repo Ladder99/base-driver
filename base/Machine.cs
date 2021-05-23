@@ -149,7 +149,7 @@ namespace l99.driver.@base
 
         public async Task RunCollectorAsync()
         {
-            await _collector.CollectAsync();
+            await _collector.SweepAsync();
         }
         
         #endregion
