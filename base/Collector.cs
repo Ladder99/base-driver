@@ -31,6 +31,7 @@ namespace l99.driver.@base
         {
             delayMs = delayMs < 0 ? _sweepMs : delayMs;
             await Task.Delay(delayMs);
+            LastSuccess = false;
             await CollectAsync();
             await _machine.Handler.OnCollectorSweepCompleteInternalAsync();
         }
