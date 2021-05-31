@@ -28,7 +28,8 @@ namespace l99.driver.@base.mqtt
             {
                 _logger.Debug($"Adding broker:\n{JObject.FromObject(cfg).ToString()}");
                 Broker broker = new Broker(cfg);
-                await broker.ConnectAsync();
+                if(cfg.auto_connect)
+                    await broker.ConnectAsync();
                 _brokers.Add(key, broker);
                 return broker;
             }

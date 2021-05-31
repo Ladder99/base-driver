@@ -13,7 +13,7 @@ namespace l99.driver.@base.mqtt
     public class Broker
     {
         private ILogger _logger;
-        private dynamic _options;
+        private MqttClientOptions _options;
         private IMqttClient _client;
 
         public IMqttClient Client
@@ -41,6 +41,16 @@ namespace l99.driver.@base.mqtt
                 .WithTcpServer(cfg.ip, cfg.port)
                 .Build();
             _client = factory.CreateMqttClient();
+        }
+
+        public async Task ConnectAsync(string lwt_topic, string lwt_payload)
+        {
+            _options.WillMessage = new MqttApplicationMessageBuilder()
+                .WithTopic(lwt_topic)
+                .WithPayload(lwt_payload)
+                .Build();
+
+            await ConnectAsync();
         }
 
         public async Task ConnectAsync()

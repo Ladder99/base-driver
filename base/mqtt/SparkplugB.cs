@@ -33,8 +33,8 @@ namespace l99.driver.@base.mqtt.sparkplugb
                 get => _device_state;
             }
             
-            private string _broker_ip;
-            private int _broker_port;
+            //private string _broker_ip;
+            //private int _broker_port;
             private string _namespace;
             private string _group_id;
             private string _edge_node_id;
@@ -44,12 +44,15 @@ namespace l99.driver.@base.mqtt.sparkplugb
     
             private int _seq;
             private int _bdSeq;
-            private IMqttClient _client;
+            //private IMqttClient _client;
+            private Broker _broker;
             
-            public Protocol(string broker_ip, int broker_port, string group_id, string edge_node_id, string device_id, string @namespace = "spBv1.0")
+            //public Protocol(string broker_ip, int broker_port, string group_id, string edge_node_id, string device_id, string @namespace = "spBv1.0")
+            public Protocol(Broker broker, string group_id, string edge_node_id, string device_id, string @namespace = "spBv1.0")
             {
-                _broker_ip = broker_ip;
-                _broker_port = broker_port;
+                //_broker_ip = broker_ip;
+                //_broker_port = broker_port;
+                _broker = broker;
                 _group_id = group_id;
                 _edge_node_id = edge_node_id;
                 _device_id = device_id;
@@ -152,6 +155,7 @@ namespace l99.driver.@base.mqtt.sparkplugb
             {
                 ++_bdSeq;
                 add_node_metric("bdSeq", _bdSeq, MetricTypeEnum.UINT64);
+                /*
                 var factory = new MqttFactory();
                 var lwt = new MqttApplicationMessageBuilder()
                     .WithTopic(formatTopic(MessageTypeEnum.NDEATH))
@@ -163,6 +167,8 @@ namespace l99.driver.@base.mqtt.sparkplugb
                     .Build();
                 _client = factory.CreateMqttClient();
                 var c = await _client.ConnectAsync(options);
+                */
+                await _broker.ConnectAsync(formatTopic(MessageTypeEnum.NDEATH), _bdSeq.ToString());
                 await dequeue_node_metrics(MessageTypeEnum.NBIRTH);
             }
     
@@ -196,13 +202,14 @@ namespace l99.driver.@base.mqtt.sparkplugb
                     seq = seqNext()
                 };
                 
-                var msg = new MqttApplicationMessageBuilder()
-                    .WithTopic(topic)
-                    .WithPayload(JObject.FromObject(payload).ToString())
-                    .Build();
+                //var msg = new MqttApplicationMessageBuilder()
+                //    .WithTopic(topic)
+                //    .WithPayload(JObject.FromObject(payload).ToString())
+                //    .Build();
                     
-                await _client.PublishAsync(msg, CancellationToken.None);
+                //await _client.PublishAsync(msg, CancellationToken.None);
                 
+                await _broker.PublishAsync(topic, JObject.FromObject(payload).ToString(), false);
                 _node_metrics.ForEach(kv => kv.Value.processed = true);
             }
             
@@ -224,13 +231,14 @@ namespace l99.driver.@base.mqtt.sparkplugb
                     seq = seqNext()
                 };
                 
-                var msg = new MqttApplicationMessageBuilder()
-                    .WithTopic(topic)
-                    .WithPayload(JObject.FromObject(payload).ToString())
-                    .Build();
+                //var msg = new MqttApplicationMessageBuilder()
+                //    .WithTopic(topic)
+                //    .WithPayload(JObject.FromObject(payload).ToString())
+                //    .Build();
                     
-                await _client.PublishAsync(msg, CancellationToken.None);
+                //await _client.PublishAsync(msg, CancellationToken.None);
                 
+                await _broker.PublishAsync(topic, JObject.FromObject(payload).ToString(), false);
                 _device_metrics.ForEach(kv => kv.Value.processed = true);
             }
             
