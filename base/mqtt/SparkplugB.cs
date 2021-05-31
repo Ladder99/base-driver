@@ -273,6 +273,9 @@ namespace l99.driver.@base.mqtt.sparkplugb
         public DataSet array_to_dataset(dynamic value)
         {
             DataSet ds = new DataSet();
+
+            if (value.Count == 0)
+                return ds;
             
             //columns
             PropertyInfo[] properties = value[0].GetType().GetProperties();
