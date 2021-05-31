@@ -192,7 +192,7 @@ namespace l99.driver.@base.mqtt.sparkplugb
                     .Where(kv => kv.Value.processed == false)
                     .Select(kv => kv.Value.metric);
     
-                if (!metrics.Any())
+                if (!metrics.Any() && msgType == MessageTypeEnum.NDATA)
                     return;
                 
                 dynamic payload = new
@@ -221,7 +221,7 @@ namespace l99.driver.@base.mqtt.sparkplugb
                     .Where(kv => kv.Value.processed == false)
                     .Select(kv => kv.Value.metric);
     
-                if (!metrics.Any())
+                if (!metrics.Any() && msgType == MessageTypeEnum.DDATA)
                     return;
                 
                 dynamic payload = new
