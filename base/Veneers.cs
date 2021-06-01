@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 
 namespace l99.driver.@base
 {
@@ -89,12 +86,12 @@ namespace l99.driver.@base
             }
         }
 
-        public async Task<dynamic> PeelAsync(string name, dynamic input, dynamic? input2)
+        public async Task<dynamic> PeelAsync(string name, dynamic input, params dynamic?[] additional_inputs)
         {
-            return await _wholeVeneers.FirstOrDefault(v => v.Name == name).PeelAsync(input, input2);
+            return await _wholeVeneers.FirstOrDefault(v => v.Name == name).PeelAsync(input, additional_inputs);
         }
         
-        public async Task<dynamic> PeelAcrossAsync(dynamic split, string name, dynamic input, dynamic? input2)
+        public async Task<dynamic> PeelAcrossAsync(dynamic split, string name, dynamic input, params dynamic?[] additional_inputs)
         {
             foreach (var key in _slicedVeneers.Keys)
             {
@@ -111,7 +108,7 @@ namespace l99.driver.@base
                     {
                         if (veneer.Name == name)
                         {
-                            return await veneer.PeelAsync(input, input2);
+                            return await veneer.PeelAsync(input, additional_inputs);
                         }
                     }
                 }

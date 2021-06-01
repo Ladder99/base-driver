@@ -135,27 +135,27 @@ namespace l99.driver.@base
             _hasMarker = true;
         }
         
-        protected virtual async Task<dynamic> FirstAsync(dynamic input, dynamic? input2)
+        protected virtual async Task<dynamic> FirstAsync(dynamic input, params dynamic?[] additional_inputs)
         {
-            return await AnyAsync(input, input2);
+            return await AnyAsync(input, additional_inputs);
         }
 
-        protected virtual async Task<dynamic> AnyAsync(dynamic input, dynamic? input2)
+        protected virtual async Task<dynamic> AnyAsync(dynamic input, params dynamic?[] additional_inputs)
         {
             
             return new { };
         }
 
-        public async Task<dynamic> PeelAsync(dynamic input, dynamic? input2)
+        public async Task<dynamic> PeelAsync(dynamic input, params dynamic?[] additional_inputs)
         {
             if(_isFirstCall)
             {
                 _isFirstCall = false;
-                return await this.FirstAsync(input, input2);
+                return await this.FirstAsync(input, additional_inputs);
             }
             else
             {
-                return await this.AnyAsync(input, input2);
+                return await this.AnyAsync(input, additional_inputs);
             }
         }
     }
