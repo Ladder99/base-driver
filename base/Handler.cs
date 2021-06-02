@@ -27,6 +27,7 @@ namespace l99.driver.@base
 
         protected virtual async Task<dynamic?> beforeDataArrivalAsync(Veneers veneers, Veneer veneer)
         {
+            await veneers.Machine.Broker.AddDiscoAsync(veneers.Machine.Id);
             
             return null;
         }
@@ -51,6 +52,7 @@ namespace l99.driver.@base
         
         protected virtual async Task<dynamic?> beforeDataChangeAsync(Veneers veneers, Veneer veneer)
         {
+            await veneers.Machine.Broker.AddDiscoAsync(veneers.Machine.Id);
             
             return null;
         }

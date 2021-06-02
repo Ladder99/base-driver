@@ -18,12 +18,16 @@ namespace l99.driver.@base.mqtt
         
         private Dictionary<string, MQTTDiscoItem> _items = new Dictionary<string, MQTTDiscoItem>();
 
-        public Disco()
+        private Broker _broker;
+        private string _base_topic;
+        
+        public Disco(Broker broker, string base_topic = "disco")
         {
-            
+            _broker = broker;
+            _base_topic = base_topic;
         }
 
-        public async Task AddAsync(string machineId, Broker broker)
+        public async Task AddAsync(string machineId)
         {
             if (!_items.ContainsKey(machineId))
             {
@@ -34,8 +38,8 @@ namespace l99.driver.@base.mqtt
                     machineId = machineId,
                     added = epoch,
                     seen = epoch,
-                    arrivalTopic = $"fanuc/{machineId}-all",
-                    changeTopic = $"fanuc/{machineId}"
+                    arrivalTopic = $"{_base_topic}/{machineId}-all",
+                    changeTopic = $"{_base_topic}/{machineId}"
                 });
             }
             else
@@ -43,9 +47,9 @@ namespace l99.driver.@base.mqtt
                 _items[machineId].seen = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             }
 
-            string topic = "fanuc/DISCO";
+            string topic = $"{_base_topic}/DISCO";
             string payload = JObject.FromObject(_items).ToString();
-            await broker.PublishAsync(topic, payload);
+            await _broker.PublishAsync(topic, payload);
         }
     }
 }

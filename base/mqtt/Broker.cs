@@ -25,6 +25,7 @@ namespace l99.driver.@base.mqtt
         private bool MQTT_PUBLISH_STATUS = false;
         private bool MQTT_PUBLISH_ARRIVALS = false;
         private bool MQTT_PUBLISH_CHANGES = false;
+        private bool MQTT_PUBLISH_DISCO = false;
 
         public Broker(dynamic cfg)
         {
@@ -35,6 +36,9 @@ namespace l99.driver.@base.mqtt
             MQTT_PUBLISH_STATUS = cfg.pub_status;
             MQTT_PUBLISH_ARRIVALS = cfg.pub_arrivals;
             MQTT_PUBLISH_CHANGES = cfg.pub_changes;
+            MQTT_PUBLISH_DISCO = cfg.pub_disco;
+            
+            this["disco"] = new Disco(this, cfg.disco_base_topic);
             
             var factory = new MqttFactory();
             _options = new MqttClientOptionsBuilder()
@@ -43,6 +47,14 @@ namespace l99.driver.@base.mqtt
             _client = factory.CreateMqttClient();
         }
 
+        public async Task AddDiscoAsync(string machine_id)
+        {
+            if (MQTT_PUBLISH_DISCO)
+            {
+                await this["disco"].AddAsync(machine_id);
+            }
+        }
+        
         public async Task ConnectAsync(string lwt_topic, string lwt_payload)
         {
             _options.WillMessage = new MqttApplicationMessageBuilder()

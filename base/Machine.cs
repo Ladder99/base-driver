@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using l99.driver.@base.mqtt;
 using NLog;
+using YamlDotNet.Core;
 
 namespace l99.driver.@base
 {
@@ -48,6 +50,18 @@ namespace l99.driver.@base
         }
         
         protected string _id = string.Empty;
+
+        public Broker Broker
+        {
+            get => this["broker"];
+        }
+        
+        public bool IsRunning
+        {
+            get => _isRunning;
+        }
+        
+        protected bool _isRunning = true;
         
         public Machine(Machines machines, bool enabled, string id, dynamic config)
         {
@@ -57,6 +71,11 @@ namespace l99.driver.@base
             _id = id;
             _veneers = new Veneers(this);
             _propertyBag = new Dictionary<string, dynamic>();
+        }
+
+        public void Shutdown()
+        {
+            _isRunning = false;
         }
 
         #region property-bag

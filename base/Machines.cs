@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using l99.driver.@base.mqtt;
 using MoreLinq;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -56,10 +57,11 @@ namespace l99.driver.@base
             }
         }
         
-        public Machine Add(dynamic cfg)
+        public Machine Add(dynamic cfg, Broker broker)
         {
             _logger.Debug($"Adding machine:\n{JObject.FromObject(cfg).ToString()}");
             var machine = (Machine) Activator.CreateInstance(Type.GetType(cfg.type), new object[] { this, cfg.enabled, cfg.id, cfg });
+            machine["broker"] = broker;
             _machines.Add(machine);
             return machine;
         }
@@ -81,10 +83,22 @@ namespace l99.driver.@base
         {
             await machine.InitCollectorAsync();
 
-            while (_isRunning)
+            while (_isRunning && machine.IsRunning)
             {
                 await machine.RunCollectorAsync();
             }
+        }
+
+        void ShutdownAll()
+        {
+            _logger.Info("All machine tasks stopping...");
+            _isRunning = false;
+        }
+
+        void Shutdown(string machine_id)
+        {
+            _logger.Info($"Machine '{machine_id}' tasks stopping...");
+            _machines.FirstOrDefault(m => m.Id == machine_id).Shutdown();
         }
     }
 }
