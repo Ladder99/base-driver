@@ -120,7 +120,7 @@ namespace l99.driver.@base
         
         protected Handler _handler;
         
-        public async Task AddHandlerAsync(Type type)
+        public async Task<Machine> AddHandlerAsync(Type type)
         {
             _logger.Debug($"[{_id}] Creating handler: {type.FullName}");
             _handler = (Handler) Activator.CreateInstance(type, new object[] { this });
@@ -128,6 +128,7 @@ namespace l99.driver.@base
             _veneers.OnDataArrivalAsync = _handler.OnDataArrivalInternalAsync;
             _veneers.OnDataChangeAsync = _handler.OnDataChangeInternalAsync;
             _veneers.OnErrorAsync = _handler.OnErrorInternalAsync;
+            return this;
         }
         
         #endregion
@@ -153,11 +154,12 @@ namespace l99.driver.@base
         
         protected int _sweepMs;
         
-        public void AddCollector(Type type, int sweepMs = 1000)
+        public Machine AddCollector(Type type, int sweepMs = 1000)
         {
             _sweepMs = sweepMs;
             _logger.Debug($"[{_id}] Creating collector: {type.FullName}");
             _collector = (Collector) Activator.CreateInstance(type, new object[] { this, sweepMs });
+            return this;
         }
 
         public async Task InitCollectorAsync()
