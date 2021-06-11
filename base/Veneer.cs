@@ -8,6 +8,8 @@ namespace l99.driver.@base
 {
     public class Veneer
     {
+        //TODO: preserve additional_inputs
+        
         protected ILogger _logger;
         
         public string Name
