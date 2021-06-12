@@ -26,6 +26,13 @@ namespace l99.driver.@base
         
         private bool _isInternal = false;
         
+        public bool IsCompound
+        {
+            get { return _isCompound; }
+        }
+        
+        private bool _isCompound = false;
+        
         public dynamic SliceKey
         {
             get { return _sliceKey; }
@@ -92,10 +99,11 @@ namespace l99.driver.@base
         
         public Func<Veneer, Task> OnArrivalAsync =  async (veneer) => {  };
         
-        public Veneer(string name = "", bool isInternal = false)
+        public Veneer(string name = "", bool isCompound = false, bool isInternal = false)
         {
             _logger = LogManager.GetLogger(this.GetType().FullName);
             _name = name;
+            _isCompound = isCompound;
             _isInternal = isInternal;
             _stopwatchDataChange.Start();
         }

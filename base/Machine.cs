@@ -190,10 +190,10 @@ namespace l99.driver.@base
             set;
         }
 
-        public void ApplyVeneer(Type type, string name, bool isInternal = false)
+        public void ApplyVeneer(Type type, string name, bool isCompound = false, bool isInternal = false)
         {
             _logger.Debug($"[{_id}] Applying veneer: {type.FullName}");
-            _veneers.Add(type, name, isInternal);
+            _veneers.Add(type, name, isCompound, isInternal);
         }
 
         public void SliceVeneer(dynamic split)
@@ -206,16 +206,16 @@ namespace l99.driver.@base
             _veneers.Slice(sliceKey, split);
         }
 
-        public void ApplyVeneerAcrossSlices(Type type, string name, bool isInternal = false)
+        public void ApplyVeneerAcrossSlices(Type type, string name, bool isCompound = false, bool isInternal = false)
         {
             _logger.Debug($"[{_id}] Applying veneer: {type.FullName}");
-            _veneers.AddAcrossSlices(type, name, isInternal);
+            _veneers.AddAcrossSlices(type, name, isCompound, isInternal);
         }
         
-        public void ApplyVeneerAcrossSlices(dynamic sliceKey, Type type, string name, bool isInternal = false)
+        public void ApplyVeneerAcrossSlices(dynamic sliceKey, Type type, string name, bool isCompound = false, bool isInternal = false)
         {
             _logger.Debug($"[{_id}] Applying veneer: {type.FullName}");
-            _veneers.AddAcrossSlices(sliceKey, type, name, isInternal);
+            _veneers.AddAcrossSlices(sliceKey, type, name, isCompound, isInternal);
         }
 
         public async Task<dynamic> PeelVeneerAsync(string name, dynamic input, params dynamic?[] additional_inputs)

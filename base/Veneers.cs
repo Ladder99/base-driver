@@ -47,20 +47,20 @@ namespace l99.driver.@base
             }
         }
 
-        public void Add(Type veneerType, string name, bool isInternal = false)
+        public void Add(Type veneerType, string name, bool isCompound = false, bool isInternal = false)
         {
-            Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isInternal });
+            Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isCompound, isInternal });
             veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
             veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
             veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
             _wholeVeneers.Add(veneer);
         }
 
-        public void AddAcrossSlices(Type veneerType, string name, bool isInternal = false)
+        public void AddAcrossSlices(Type veneerType, string name, bool isCompound = false, bool isInternal = false)
         {
             foreach (var key in _slicedVeneers.Keys)
             {
-                Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isInternal });
+                Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isCompound, isInternal });
                 veneer.SetSliceKey(key);
                 veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
                 veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
@@ -69,7 +69,7 @@ namespace l99.driver.@base
             }
         }
         
-        public void AddAcrossSlices(dynamic sliceKey, Type veneerType, string name, bool isInternal = false)
+        public void AddAcrossSlices(dynamic sliceKey, Type veneerType, string name, bool isCompound = false, bool isInternal = false)
         {
             foreach (var key in _slicedVeneers.Keys)
             {
@@ -77,7 +77,7 @@ namespace l99.driver.@base
                 if (key_parts.Length == 1)
                     continue;
                 
-                Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isInternal });
+                Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isCompound, isInternal });
                 veneer.SetSliceKey(key);
                 veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
                 veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
