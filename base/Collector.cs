@@ -8,13 +8,15 @@ namespace l99.driver.@base
         protected ILogger _logger;
         protected Machine _machine;
         protected int _sweepMs;
+        protected dynamic[] _additional_params;
         public bool LastSuccess { get; set; }
         
-        public Collector(Machine machine, int sweepMs = 1000)
+        public Collector(Machine machine, int sweepMs = 1000, params dynamic[] additional_params)
         {
             _logger = LogManager.GetLogger(this.GetType().FullName);
             _machine = machine;
             _sweepMs = sweepMs;
+            _additional_params = additional_params;
         }
 
         public virtual async Task<dynamic?> InitializeAsync()

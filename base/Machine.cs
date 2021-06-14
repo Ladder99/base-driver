@@ -154,11 +154,11 @@ namespace l99.driver.@base
         
         protected int _sweepMs;
         
-        public Machine AddCollector(Type type, int sweepMs = 1000)
+        public Machine AddCollector(Type type, int sweepMs = 1000, params dynamic[] additional_params)
         {
             _sweepMs = sweepMs;
             _logger.Debug($"[{_id}] Creating collector: {type.FullName}");
-            _collector = (Collector) Activator.CreateInstance(type, new object[] { this, sweepMs });
+            _collector = (Collector) Activator.CreateInstance(type, new object[] { this, sweepMs, additional_params });
             return this;
         }
 
