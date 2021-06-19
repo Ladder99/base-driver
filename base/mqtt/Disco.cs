@@ -47,6 +47,8 @@ namespace l99.driver.@base.mqtt
                 _items[machineId].seen = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             }
 
+            //TODO: object key and machineId are redundant
+            
             string topic = $"{_base_topic}/DISCO";
             string payload = JObject.FromObject(_items).ToString();
             await _broker.PublishAsync(topic, payload);

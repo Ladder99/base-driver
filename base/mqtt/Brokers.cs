@@ -20,6 +20,8 @@ namespace l99.driver.@base.mqtt
         {
             var key = cfg.ip + ":" + cfg.port;
 
+            //TODO: does not handle multiple brokers with different configurations correctly
+            // e.g. if first broker is enabled=false, and second enabled=true, then broker will remain disabled
             if (_brokers.ContainsKey(key))
             {
                 return _brokers[key];
