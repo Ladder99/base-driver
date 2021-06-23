@@ -25,31 +25,31 @@ namespace l99.driver.@base
             {
                 return new
                 {
-                    _id
+                    _id = id
                 };
             }
         }
 
         public Machines Machines
         {
-            get => _machines;
+            get => machines;
         }
         
-        protected Machines _machines;
+        protected Machines machines;
         
         public bool Enabled
         {
-            get => _enabled;
+            get => enabled;
         }
         
-        protected bool _enabled = false;
+        protected bool enabled = false;
         
         public string Id
         {
-            get => _id;
+            get => id;
         }
         
-        protected string _id = string.Empty;
+        protected string id = string.Empty;
 
         public Broker Broker
         {
@@ -58,24 +58,24 @@ namespace l99.driver.@base
         
         public bool IsRunning
         {
-            get => _isRunning;
+            get => isRunning;
         }
         
-        protected bool _isRunning = true;
+        protected bool isRunning = true;
         
         public Machine(Machines machines, bool enabled, string id, dynamic config)
         {
             _logger = LogManager.GetCurrentClassLogger();
-            _machines = machines;
-            _enabled = enabled;
-            _id = id;
-            _veneers = new Veneers(this);
+            this.machines = machines;
+            this.enabled = enabled;
+            this.id = id;
+            veneers = new Veneers(this);
             _propertyBag = new Dictionary<string, dynamic>();
         }
 
         public void Shutdown()
         {
-            _isRunning = false;
+            isRunning = false;
         }
 
         #region property-bag
@@ -115,19 +115,19 @@ namespace l99.driver.@base
         
         public Handler Handler
         {
-            get => _handler;
+            get => handler;
         }
         
-        protected Handler _handler;
+        protected Handler handler;
         
         public async Task<Machine> AddHandlerAsync(Type type)
         {
-            _logger.Debug($"[{_id}] Creating handler: {type.FullName}");
-            _handler = (Handler) Activator.CreateInstance(type, new object[] { this });
-            await _handler.InitializeAsync();
-            _veneers.OnDataArrivalAsync = _handler.OnDataArrivalInternalAsync;
-            _veneers.OnDataChangeAsync = _handler.OnDataChangeInternalAsync;
-            _veneers.OnErrorAsync = _handler.OnErrorInternalAsync;
+            _logger.Debug($"[{id}] Creating handler: {type.FullName}");
+            handler = (Handler) Activator.CreateInstance(type, new object[] { this });
+            await handler.InitializeAsync();
+            veneers.OnDataArrivalAsync = handler.OnDataArrivalInternalAsync;
+            veneers.OnDataChangeAsync = handler.OnDataChangeInternalAsync;
+            veneers.OnErrorAsync = handler.OnErrorInternalAsync;
             return this;
         }
         
@@ -137,40 +137,40 @@ namespace l99.driver.@base
         
         public bool CollectorSuccess
         {
-            get => _collector.LastSuccess;
+            get => collector.LastSuccess;
         }
         
         public Collector Collector
         {
-            get => _collector;
+            get => collector;
         }
         
-        protected Collector _collector;
+        protected Collector collector;
 
         public int SweepMs
         {
-            get => _sweepMs;
+            get => sweepMs;
         }
         
-        protected int _sweepMs;
+        protected int sweepMs;
         
-        public Machine AddCollector(Type type, int sweepMs = 1000, params dynamic[] additional_params)
+        public Machine AddCollector(Type type, int sweepMs = 1000, params dynamic[] additionalParams)
         {
-            _sweepMs = sweepMs;
-            _logger.Debug($"[{_id}] Creating collector: {type.FullName}");
-            _collector = (Collector) Activator.CreateInstance(type, new object[] { this, sweepMs, additional_params });
+            this.sweepMs = sweepMs;
+            _logger.Debug($"[{id}] Creating collector: {type.FullName}");
+            collector = (Collector) Activator.CreateInstance(type, new object[] { this, sweepMs, additionalParams });
             return this;
         }
 
         public async Task InitCollectorAsync()
         {
-            _logger.Debug($"[{_id}] Initializing collector...");
-            await _collector.InitializeAsync();
+            _logger.Debug($"[{id}] Initializing collector...");
+            await collector.InitializeAsync();
         }
 
         public async Task RunCollectorAsync()
         {
-            await _collector.SweepAsync();
+            await collector.SweepAsync();
         }
         
         #endregion
@@ -179,10 +179,10 @@ namespace l99.driver.@base
         
         public Veneers Veneers
         {
-            get => _veneers;
+            get => veneers;
         }
         
-        protected Veneers _veneers;
+        protected Veneers veneers;
 
         public bool VeneersApplied
         {
@@ -192,45 +192,45 @@ namespace l99.driver.@base
 
         public void ApplyVeneer(Type type, string name, bool isCompound = false, bool isInternal = false)
         {
-            _logger.Debug($"[{_id}] Applying veneer: {type.FullName}");
-            _veneers.Add(type, name, isCompound, isInternal);
+            _logger.Debug($"[{id}] Applying veneer: {type.FullName}");
+            veneers.Add(type, name, isCompound, isInternal);
         }
 
         public void SliceVeneer(dynamic split)
         {
-            _veneers.Slice(split);
+            veneers.Slice(split);
         }
         
         public void SliceVeneer(dynamic sliceKey, dynamic split)
         {
-            _veneers.Slice(sliceKey, split);
+            veneers.Slice(sliceKey, split);
         }
 
         public void ApplyVeneerAcrossSlices(Type type, string name, bool isCompound = false, bool isInternal = false)
         {
-            _logger.Debug($"[{_id}] Applying veneer: {type.FullName}");
-            _veneers.AddAcrossSlices(type, name, isCompound, isInternal);
+            _logger.Debug($"[{id}] Applying veneer: {type.FullName}");
+            veneers.AddAcrossSlices(type, name, isCompound, isInternal);
         }
         
         public void ApplyVeneerAcrossSlices(dynamic sliceKey, Type type, string name, bool isCompound = false, bool isInternal = false)
         {
-            _logger.Debug($"[{_id}] Applying veneer: {type.FullName}");
-            _veneers.AddAcrossSlices(sliceKey, type, name, isCompound, isInternal);
+            _logger.Debug($"[{id}] Applying veneer: {type.FullName}");
+            veneers.AddAcrossSlices(sliceKey, type, name, isCompound, isInternal);
         }
 
-        public async Task<dynamic> PeelVeneerAsync(string name, dynamic input, params dynamic?[] additional_inputs)
+        public async Task<dynamic> PeelVeneerAsync(string name, dynamic input, params dynamic?[] additionalInputs)
         {
-            return await _veneers.PeelAsync(name, input, additional_inputs);
+            return await veneers.PeelAsync(name, input, additionalInputs);
         }
         
-        public async Task<dynamic> PeelAcrossVeneerAsync(dynamic split, string name, dynamic input, params dynamic?[] additional_inputs)
+        public async Task<dynamic> PeelAcrossVeneerAsync(dynamic split, string name, dynamic input, params dynamic?[] additionalInputs)
         {
-            return await _veneers.PeelAcrossAsync(split, name, input, additional_inputs);
+            return await veneers.PeelAcrossAsync(split, name, input, additionalInputs);
         }
 
         public void MarkVeneer(dynamic split, dynamic marker)
         {
-            _veneers.Mark(split, marker);
+            veneers.Mark(split, marker);
         }
         
         #endregion

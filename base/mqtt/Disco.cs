@@ -19,12 +19,12 @@ namespace l99.driver.@base.mqtt
         private Dictionary<string, MQTTDiscoItem> _items = new Dictionary<string, MQTTDiscoItem>();
 
         private Broker _broker;
-        private string _base_topic;
+        private string _baseTopic;
         
-        public Disco(Broker broker, string base_topic = "disco")
+        public Disco(Broker broker, string baseTopic = "disco")
         {
             _broker = broker;
-            _base_topic = base_topic;
+            _baseTopic = baseTopic;
         }
 
         public async Task AddAsync(string machineId)
@@ -38,8 +38,8 @@ namespace l99.driver.@base.mqtt
                     machineId = machineId,
                     added = epoch,
                     seen = epoch,
-                    arrivalTopic = $"{_base_topic}/{machineId}-all",
-                    changeTopic = $"{_base_topic}/{machineId}"
+                    arrivalTopic = $"{_baseTopic}/{machineId}-all",
+                    changeTopic = $"{_baseTopic}/{machineId}"
                 });
             }
             else
@@ -49,7 +49,7 @@ namespace l99.driver.@base.mqtt
 
             //TODO: object key and machineId are redundant
             
-            string topic = $"{_base_topic}/DISCO";
+            string topic = $"{_baseTopic}/DISCO";
             string payload = JObject.FromObject(_items).ToString();
             await _broker.PublishAsync(topic, payload);
         }

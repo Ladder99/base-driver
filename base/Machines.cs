@@ -13,13 +13,9 @@ namespace l99.driver.@base
     public class Machines
     {
         private ILogger _logger;
-        
         private List<Machine> _machines;
-        
         private Dictionary<string, dynamic> _propertyBag;
-
         private int _collectionInterval;
-        
         private bool _isRunning = true;
         
         public Machines(int collectionInterval = 1000)
@@ -95,10 +91,10 @@ namespace l99.driver.@base
             _isRunning = false;
         }
 
-        void Shutdown(string machine_id)
+        void Shutdown(string machineId)
         {
-            _logger.Info($"Machine '{machine_id}' tasks stopping...");
-            _machines.FirstOrDefault(m => m.Id == machine_id).Shutdown();
+            _logger.Info($"Machine '{machineId}' tasks stopping...");
+            _machines.FirstOrDefault(m => m.Id == machineId).Shutdown();
         }
     }
 }

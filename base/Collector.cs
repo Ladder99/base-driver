@@ -5,18 +5,23 @@ namespace l99.driver.@base
 {
     public class Collector
     {
-        protected ILogger _logger;
-        protected Machine _machine;
-        protected int _sweepMs;
-        protected dynamic[] _additional_params;
+        protected ILogger logger;
+        protected Machine machine;
+        protected int sweepMs;
+        protected dynamic[] additionalParams;
         public bool LastSuccess { get; set; }
-        
-        public Collector(Machine machine, int sweepMs = 1000, params dynamic[] additional_params)
+
+        public Machine Machine
         {
-            _logger = LogManager.GetLogger(this.GetType().FullName);
-            _machine = machine;
-            _sweepMs = sweepMs;
-            _additional_params = additional_params;
+            get => machine;
+        }
+        
+        public Collector(Machine machine, int sweepMs = 1000, params dynamic[] additionalParams)
+        {
+            logger = LogManager.GetLogger(this.GetType().FullName);
+            this.machine = machine;
+            this.sweepMs = sweepMs;
+            this.additionalParams = additionalParams;
         }
 
         public virtual async Task<dynamic?> InitializeAsync()
@@ -31,11 +36,11 @@ namespace l99.driver.@base
 
         public virtual async Task SweepAsync(int delayMs = -1)
         {
-            delayMs = delayMs < 0 ? _sweepMs : delayMs;
+            delayMs = delayMs < 0 ? sweepMs : delayMs;
             await Task.Delay(delayMs);
             LastSuccess = false;
             await CollectAsync();
-            await _machine.Handler.OnCollectorSweepCompleteInternalAsync();
+            await machine.Handler.OnCollectorSweepCompleteInternalAsync();
         }
     }
 }

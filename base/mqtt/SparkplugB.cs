@@ -27,18 +27,18 @@ namespace l99.driver.@base.mqtt.sparkplugb
             DEAD
         }
 
-        private DeviceStateEnum _device_state = DeviceStateEnum.NONE;
+        private DeviceStateEnum _deviceState = DeviceStateEnum.NONE;
         public DeviceStateEnum DeviceState
         {
-            get => _device_state;
+            get => _deviceState;
         }
         
         //private string _broker_ip;
         //private int _broker_port;
         private string _namespace;
-        private string _group_id;
-        private string _edge_node_id;
-        private string _device_id;
+        private string _groupId;
+        private string _edgeNodeId;
+        private string _deviceId;
         private string _topicFormatNode = $"{{0}}/{{1}}/{{2}}/{{3}}";
         private string _topicFormatDevice = $"{{0}}/{{1}}/{{2}}/{{3}}/{{4}}";
 
@@ -48,14 +48,14 @@ namespace l99.driver.@base.mqtt.sparkplugb
         private Broker _broker;
         
         //public Protocol(string broker_ip, int broker_port, string group_id, string edge_node_id, string device_id, string @namespace = "spBv1.0")
-        public Protocol(Broker broker, string group_id, string edge_node_id, string device_id, string @namespace = "spBv1.0")
+        public Protocol(Broker broker, string groupId, string edgeNodeId, string deviceId, string @namespace = "spBv1.0")
         {
             //_broker_ip = broker_ip;
             //_broker_port = broker_port;
             _broker = broker;
-            _group_id = group_id;
-            _edge_node_id = edge_node_id;
-            _device_id = device_id;
+            _groupId = groupId;
+            _edgeNodeId = edgeNodeId;
+            _deviceId = deviceId;
             _namespace = @namespace;
         }
 
@@ -67,30 +67,30 @@ namespace l99.driver.@base.mqtt.sparkplugb
             }
             else if (new MessageTypeEnum[] {MessageTypeEnum.DBIRTH,MessageTypeEnum.DDEATH,MessageTypeEnum.DDATA,MessageTypeEnum.DCMD}.Contains(messageType))
             {
-                return string.Format(_topicFormatDevice, _namespace, _group_id, messageType.ToString(), _edge_node_id, _device_id); 
+                return string.Format(_topicFormatDevice, _namespace, _groupId, messageType.ToString(), _edgeNodeId, _deviceId); 
             }
             else if (new MessageTypeEnum[] {MessageTypeEnum.NBIRTH,MessageTypeEnum.NDEATH,MessageTypeEnum.NDATA,MessageTypeEnum.NCMD}.Contains(messageType))
             {
-                return string.Format(_topicFormatNode, _namespace, _group_id, messageType.ToString(), _edge_node_id);
+                return string.Format(_topicFormatNode, _namespace, _groupId, messageType.ToString(), _edgeNodeId);
             }
 
             return null;
         }
 
-        private Dictionary<string, MetricWrapper> _node_metrics = new Dictionary<string, MetricWrapper>();
-        private Dictionary<string, MetricWrapper> _device_metrics = new Dictionary<string, MetricWrapper>();
+        private Dictionary<string, MetricWrapper> _nodeMetrics = new Dictionary<string, MetricWrapper>();
+        private Dictionary<string, MetricWrapper> _deviceMetrics = new Dictionary<string, MetricWrapper>();
         
         public void add_node_metric(string name, dynamic value, MetricTypeEnum type = MetricTypeEnum.STRING)
         {
-            if (_node_metrics.ContainsKey(name))
+            if (_nodeMetrics.ContainsKey(name))
             {
-                _node_metrics[name].metric.timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
-                _node_metrics[name].metric.value = value;
-                _node_metrics[name].processed = false;
+                _nodeMetrics[name].metric.timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+                _nodeMetrics[name].metric.value = value;
+                _nodeMetrics[name].processed = false;
             }
             else
             {
-                _node_metrics.Add(name, new MetricWrapper()
+                _nodeMetrics.Add(name, new MetricWrapper()
                 {
                     processed = false,
                     metric = new Metric()
@@ -107,17 +107,17 @@ namespace l99.driver.@base.mqtt.sparkplugb
         public void add_device_metric(string name, dynamic value, MetricTypeEnum type = MetricTypeEnum.UNKNOWN)
         {
             if (type == MetricTypeEnum.UNKNOWN)
-                type = type_to_enum<MetricTypeEnum>(value.GetType());
+                type = typeToEnum<MetricTypeEnum>(value.GetType());
 
-            if (_device_metrics.ContainsKey(name))
+            if (_deviceMetrics.ContainsKey(name))
             {
-                _device_metrics[name].metric.timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
-                _device_metrics[name].metric.value = value;
-                _device_metrics[name].processed = false;
+                _deviceMetrics[name].metric.timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+                _deviceMetrics[name].metric.value = value;
+                _deviceMetrics[name].processed = false;
             }
             else
             {
-                _device_metrics.Add(name, new MetricWrapper()
+                _deviceMetrics.Add(name, new MetricWrapper()
                 {
                     processed = false,
                     metric = new Metric()
@@ -146,12 +146,12 @@ namespace l99.driver.@base.mqtt.sparkplugb
             return _seq - 1;
         }
 
-        public async Task give_node_birth()
+        public async Task GiveNodeBirth()
         { 
-            await create_client();
+            await createClient();
         }
 
-        private async Task create_client()
+        private async Task createClient()
         {
             ++_bdSeq;
             add_node_metric("bdSeq", _bdSeq, MetricTypeEnum.UINT64);
@@ -169,26 +169,26 @@ namespace l99.driver.@base.mqtt.sparkplugb
             var c = await _client.ConnectAsync(options);
             */
             await _broker.ConnectAsync(formatTopic(MessageTypeEnum.NDEATH), _bdSeq.ToString());
-            await dequeue_node_metrics(MessageTypeEnum.NBIRTH);
+            await DequeueNodeMetrics(MessageTypeEnum.NBIRTH);
         }
 
-        public async Task give_device_birth()
+        public async Task GiveDeviceBirth()
         {
-            await dequeue_device_metrics(MessageTypeEnum.DBIRTH);
-            _device_state = DeviceStateEnum.ALIVE;
+            await DequeueDeviceMetrics(MessageTypeEnum.DBIRTH);
+            _deviceState = DeviceStateEnum.ALIVE;
         }
 
-        public async Task give_device_death()
+        public async Task GiveDeviceDeath()
         {
-            await dequeue_device_metrics(MessageTypeEnum.DDEATH);
-            _device_state = DeviceStateEnum.DEAD;
+            await DequeueDeviceMetrics(MessageTypeEnum.DDEATH);
+            _deviceState = DeviceStateEnum.DEAD;
         }
 
-        public async Task dequeue_node_metrics(MessageTypeEnum msgType = MessageTypeEnum.NDATA)
+        public async Task DequeueNodeMetrics(MessageTypeEnum msgType = MessageTypeEnum.NDATA)
         {
             var topic = formatTopic(msgType);
 
-            var metrics = _node_metrics
+            var metrics = _nodeMetrics
                 .Where(kv => kv.Value.processed == false)
                 .Select(kv => kv.Value.metric);
 
@@ -210,14 +210,14 @@ namespace l99.driver.@base.mqtt.sparkplugb
             //await _client.PublishAsync(msg, CancellationToken.None);
             
             await _broker.PublishAsync(topic, JObject.FromObject(payload).ToString(), false);
-            _node_metrics.ForEach(kv => kv.Value.processed = true);
+            _nodeMetrics.ForEach(kv => kv.Value.processed = true);
         }
         
-        public async Task dequeue_device_metrics(MessageTypeEnum msgType = MessageTypeEnum.DDATA)
+        public async Task DequeueDeviceMetrics(MessageTypeEnum msgType = MessageTypeEnum.DDATA)
         {
             var topic = formatTopic(msgType);
 
-            var metrics = _device_metrics
+            var metrics = _deviceMetrics
                 .Where(kv => kv.Value.processed == false)
                 .Select(kv => kv.Value.metric);
 
@@ -239,10 +239,10 @@ namespace l99.driver.@base.mqtt.sparkplugb
             //await _client.PublishAsync(msg, CancellationToken.None);
             
             await _broker.PublishAsync(topic, JObject.FromObject(payload).ToString(), false);
-            _device_metrics.ForEach(kv => kv.Value.processed = true);
+            _deviceMetrics.ForEach(kv => kv.Value.processed = true);
         }
         
-        public DataSet object_to_dataset(dynamic value)
+        public DataSet ObjectToDataset(dynamic value)
         {
             DataSet ds = new DataSet();
             PropertyInfo[] properties = value.GetType().GetProperties();
@@ -257,7 +257,7 @@ namespace l99.driver.@base.mqtt.sparkplugb
             foreach (var property in properties)
             {
                 var pv = property.GetValue(value);
-                types.Add(type_to_enum<DataSetTypeEnum>(pv.GetType()));
+                types.Add(typeToEnum<DataSetTypeEnum>(pv.GetType()));
                 
                 dvs.Add(new DataSet.DataSetValue
                 {
@@ -270,7 +270,7 @@ namespace l99.driver.@base.mqtt.sparkplugb
             return ds;
         }
         
-        public DataSet array_to_dataset(dynamic value)
+        public DataSet ArrayToDataset(dynamic value)
         {
             DataSet ds = new DataSet();
 
@@ -300,11 +300,11 @@ namespace l99.driver.@base.mqtt.sparkplugb
                     
                     if (ds.types == null)
                     {
-                        types.Add(type_to_enum<DataSetTypeEnum>(pv.GetType()));
+                        types.Add(typeToEnum<DataSetTypeEnum>(pv.GetType()));
                     }
                     else
                     {
-                        var te = type_to_enum<DataSetTypeEnum>(pv.GetType());
+                        var te = typeToEnum<DataSetTypeEnum>(pv.GetType());
                         if (te != ds.types[pc])
                             ds.types[pc] = DataSetTypeEnum.UNKNOWN;
                     }
@@ -327,7 +327,7 @@ namespace l99.driver.@base.mqtt.sparkplugb
             return ds;
         }
         
-        private TEnum type_to_enum<TEnum>(Type type) where TEnum: struct
+        private TEnum typeToEnum<TEnum>(Type type) where TEnum: struct
         {
             TEnum t = default(TEnum);
             if (Enum.TryParse(type.Name, true, out t))

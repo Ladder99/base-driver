@@ -7,11 +7,8 @@ namespace l99.driver.@base
 {
     public class Veneers
     {
-        public Machine Machine
-        {
-            get { return _machine; }
-        }
-        
+        public Machine Machine => _machine;
+
         private Machine _machine;
 
         public Func<Veneers, Veneer, Task> OnDataArrivalAsync = async (vv, v) => {  };
@@ -86,12 +83,12 @@ namespace l99.driver.@base
             }
         }
 
-        public async Task<dynamic> PeelAsync(string name, dynamic input, params dynamic?[] additional_inputs)
+        public async Task<dynamic> PeelAsync(string name, dynamic input, params dynamic?[] additionalInputs)
         {
-            return await _wholeVeneers.FirstOrDefault(v => v.Name == name).PeelAsync(input, additional_inputs);
+            return await _wholeVeneers.FirstOrDefault(v => v.Name == name).PeelAsync(input, additionalInputs);
         }
         
-        public async Task<dynamic> PeelAcrossAsync(dynamic split, string name, dynamic input, params dynamic?[] additional_inputs)
+        public async Task<dynamic> PeelAcrossAsync(dynamic split, string name, dynamic input, params dynamic?[] additionalInputs)
         {
             foreach (var key in _slicedVeneers.Keys)
             {
@@ -108,7 +105,7 @@ namespace l99.driver.@base
                     {
                         if (veneer.Name == name)
                         {
-                            return await veneer.PeelAsync(input, additional_inputs);
+                            return await veneer.PeelAsync(input, additionalInputs);
                         }
                     }
                 }
@@ -122,14 +119,14 @@ namespace l99.driver.@base
         {
             foreach (var key in _slicedVeneers.Keys)
             {
-                dynamic temp_split = split;
+                dynamic tempSplit = split;
 
                 if (split is Array)
                 {
-                    temp_split = string.Join(SPLIT_SEP, split);
+                    tempSplit = string.Join(SPLIT_SEP, split);
                 }
                 
-                if (key.Equals(temp_split))
+                if (key.Equals(tempSplit))
                 {
                     foreach (Veneer veneer in _slicedVeneers[key])
                     {

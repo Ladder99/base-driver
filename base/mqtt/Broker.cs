@@ -47,19 +47,19 @@ namespace l99.driver.@base.mqtt
             _client = factory.CreateMqttClient();
         }
 
-        public async Task AddDiscoAsync(string machine_id)
+        public async Task AddDiscoAsync(string machineId)
         {
             if (MQTT_PUBLISH_DISCO)
             {
-                await this["disco"].AddAsync(machine_id);
+                await this["disco"].AddAsync(machineId);
             }
         }
         
-        public async Task ConnectAsync(string lwt_topic, string lwt_payload)
+        public async Task ConnectAsync(string lwtTopic, string lwtPayload)
         {
             _options.WillMessage = new MqttApplicationMessageBuilder()
-                .WithTopic(lwt_topic)
-                .WithPayload(lwt_payload)
+                .WithTopic(lwtTopic)
+                .WithPayload(lwtPayload)
                 .Build();
 
             await ConnectAsync();

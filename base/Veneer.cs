@@ -10,88 +10,55 @@ namespace l99.driver.@base
     {
         //TODO: preserve additional_inputs
         
-        protected ILogger _logger;
+        protected ILogger logger;
         
-        public string Name
-        {
-            get { return _name; }
-        }
-        
-        protected string _name = "";
+        public string Name => name;
 
-        public bool IsInternal
-        {
-            get { return _isInternal; }
-        }
-        
+        protected string name = "";
+
+        public bool IsInternal => _isInternal;
+
         private bool _isInternal = false;
         
-        public bool IsCompound
-        {
-            get { return _isCompound; }
-        }
-        
+        public bool IsCompound => _isCompound;
+
         private bool _isCompound = false;
         
-        public dynamic SliceKey
-        {
-            get { return _sliceKey; }
-        }
-        
-        protected dynamic? _sliceKey = null;
-        
-        public dynamic Marker
-        {
-            get { return _marker; }
-        }
-        
-        protected dynamic _marker = new { };
-        
-        protected bool _hasMarker = false;
-        
-        public TimeSpan ArrivalDelta
-        {
-            get { return _stopwatchDataArrival.Elapsed; }
-        }
-        
-        public dynamic LastArrivedInput
-        {
-            get { return _lastArrivedInput; }
-        }
-        
-        protected dynamic _lastArrivedInput = new { };
-        
-        public dynamic LastArrivedValue
-        {
-            get { return _lastArrivedValue; }
-        }
-        
-        protected dynamic _lastArrivedValue = new { };
-        
-        protected Stopwatch _stopwatchDataArrival = new Stopwatch();
-        
-        public dynamic LastChangedInput
-        {
-            get { return _lastChangedInput; }
-        }
-        
-        protected dynamic _lastChangedInput = new { };
-        
-        public dynamic LastChangedValue
-        {
-            get { return _lastChangedValue; }
-        }
-        
-        protected dynamic _lastChangedValue = new { };
-        
-        public TimeSpan ChangeDelta
-        {
-            get { return _stopwatchDataChange.Elapsed; }
-        }
-        
-        protected Stopwatch _stopwatchDataChange = new Stopwatch();
+        public dynamic SliceKey => sliceKey;
 
-        protected bool _isFirstCall = true;
+        protected dynamic? sliceKey = null;
+        
+        public dynamic Marker => marker;
+
+        protected dynamic marker = new { };
+        
+        protected bool hasMarker = false;
+        
+        public TimeSpan ArrivalDelta => stopwatchDataArrival.Elapsed;
+
+        public dynamic LastArrivedInput => lastArrivedInput;
+
+        protected dynamic lastArrivedInput = new { };
+        
+        public dynamic LastArrivedValue => lastArrivedValue;
+
+        protected dynamic lastArrivedValue = new { };
+        
+        protected Stopwatch stopwatchDataArrival = new Stopwatch();
+        
+        public dynamic LastChangedInput => lastChangedInput;
+
+        protected dynamic lastChangedInput = new { };
+        
+        public dynamic LastChangedValue => lastChangedValue;
+
+        protected dynamic lastChangedValue = new { };
+        
+        public TimeSpan ChangeDelta => stopwatchDataChange.Elapsed;
+
+        protected Stopwatch stopwatchDataChange = new Stopwatch();
+
+        protected bool isFirstCall = true;
         
         public Func<Veneer, Task> OnErrorAsync = async (veneer) => {  };
 
@@ -101,72 +68,70 @@ namespace l99.driver.@base
         
         public Veneer(string name = "", bool isCompound = false, bool isInternal = false)
         {
-            _logger = LogManager.GetLogger(this.GetType().FullName);
-            _name = name;
+            logger = LogManager.GetLogger(this.GetType().FullName);
+            this.name = name;
             _isCompound = isCompound;
             _isInternal = isInternal;
-            _stopwatchDataChange.Start();
+            stopwatchDataChange.Start();
         }
         
-        protected async Task onDataArrivedAsync(dynamic input, dynamic current_value)
+        protected async Task onDataArrivedAsync(dynamic input, dynamic currentValue)
         {
-            _logger.Trace($"[{_name}] Veneer arrival invocation result:\n{JObject.FromObject(current_value).ToString()}");
-            this._lastArrivedInput = input;
-            this._lastArrivedValue = current_value;
-            await this.OnArrivalAsync(this);
-            _stopwatchDataArrival.Restart();
+            logger.Trace($"[{name}] Veneer arrival invocation result:\n{JObject.FromObject(currentValue).ToString()}");
+            lastArrivedInput = input;
+            lastArrivedValue = currentValue;
+            await OnArrivalAsync(this);
+            stopwatchDataArrival.Restart();
         }
         
-        protected async Task onDataChangedAsync(dynamic input, dynamic current_value)
+        protected async Task onDataChangedAsync(dynamic input, dynamic currentValue)
         {
-            _logger.Trace($"[{_name}] Veneer change invocation result:\n{JObject.FromObject(current_value).ToString()}");
-            this._lastChangedInput = input;
-            this._lastChangedValue = current_value;
-            await this.OnChangeAsync(this);
-            _stopwatchDataChange.Restart();
+            logger.Trace($"[{name}] Veneer change invocation result:\n{JObject.FromObject(currentValue).ToString()}");
+            lastChangedInput = input;
+            lastChangedValue = currentValue;
+            await OnChangeAsync(this);
+            stopwatchDataChange.Restart();
         }
 
         protected async Task onErrorAsync(dynamic input)
         {
-            _logger.Info($"[{_name}] Veneer error invocation result:\n{JObject.FromObject(input).ToString()}");
-            this._lastArrivedInput = input;
+            logger.Info($"[{name}] Veneer error invocation result:\n{JObject.FromObject(input).ToString()}");
+            lastArrivedInput = input;
             // TODO: overwrite last arrived value?
-            await this.OnErrorAsync(this);
+            await OnErrorAsync(this);
         }
 
         public void SetSliceKey(dynamic? sliceKey)
         {
-            _sliceKey = sliceKey;
+            this.sliceKey = sliceKey;
         }
         
         public void Mark(dynamic marker)
         {
-            _marker = marker;
-            _hasMarker = true;
+            this.marker = marker;
+            hasMarker = true;
         }
         
-        protected virtual async Task<dynamic> FirstAsync(dynamic input, params dynamic?[] additional_inputs)
+        protected virtual async Task<dynamic> FirstAsync(dynamic input, params dynamic?[] additionalInputs)
         {
-            return await AnyAsync(input, additional_inputs);
+            return await AnyAsync(input, additionalInputs);
         }
 
-        protected virtual async Task<dynamic> AnyAsync(dynamic input, params dynamic?[] additional_inputs)
+        protected virtual async Task<dynamic> AnyAsync(dynamic input, params dynamic?[] additionalInputs)
         {
             
             return new { };
         }
 
-        public async Task<dynamic> PeelAsync(dynamic input, params dynamic?[] additional_inputs)
+        public async Task<dynamic> PeelAsync(dynamic input, params dynamic?[] additionalInputs)
         {
-            if(_isFirstCall)
+            if(isFirstCall)
             {
-                _isFirstCall = false;
-                return await this.FirstAsync(input, additional_inputs);
+                isFirstCall = false;
+                return await this.FirstAsync(input, additionalInputs);
             }
-            else
-            {
-                return await this.AnyAsync(input, additional_inputs);
-            }
+
+            return await this.AnyAsync(input, additionalInputs);
         }
     }
 }
