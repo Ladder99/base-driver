@@ -31,15 +31,16 @@ namespace l99.driver.@base.mqtt
         {
             _logger = LogManager.GetCurrentClassLogger();
             _propertyBag = new Dictionary<string, dynamic>();
+            _subscriptions = new Dictionary<string, List<Func<string, string, ushort, bool, Task>>>();
             
             MQTT_CONNECT = cfg.enabled;
             MQTT_PUBLISH_STATUS = cfg.pub_status;
             MQTT_PUBLISH_ARRIVALS = cfg.pub_arrivals;
             MQTT_PUBLISH_CHANGES = cfg.pub_changes;
             MQTT_PUBLISH_DISCO = cfg.pub_disco;
-            
+
             this["disco"] = new Disco(this, cfg.disco_base_topic);
-            
+
             var factory = new MqttFactory();
             _options = new MqttClientOptionsBuilder()
                 .WithTcpServer(cfg.ip, cfg.port)
@@ -54,7 +55,7 @@ namespace l99.driver.@base.mqtt
                 await this["disco"].AddAsync(machineId);
             }
         }
-        
+
         public async Task ConnectAsync(string lwtTopic, string lwtPayload)
         {
             _options.WillMessage = new MqttApplicationMessageBuilder()
@@ -73,10 +74,14 @@ namespace l99.driver.@base.mqtt
                 try
                 {
                     await _client.ConnectAsync(_options, CancellationToken.None);
+                    _client.UseApplicationMessageReceivedHandler(async (e) =>
+                    {
+                        await handleIncomingMessage(e);
+                    });
                 }
                 catch (MqttCommunicationException ex)
                 {
-                    _logger.Warn(ex,$"Broker connection failed: {_options.ChannelOptions}");
+                    _logger.Warn(ex, $"Broker connection failed: {_options.ChannelOptions}");
                 }
             }
             else
@@ -85,6 +90,42 @@ namespace l99.driver.@base.mqtt
             }
         }
 
+        private async Task handleIncomingMessage(MqttApplicationMessageReceivedEventArgs e)
+        {
+            //TODO: handle wildcards
+            if (_subscriptions.ContainsKey(e.ApplicationMessage.Topic))
+            {
+                foreach (var receiver in _subscriptions[e.ApplicationMessage.Topic])
+                {
+                    await receiver(e.ApplicationMessage.Topic,
+                        e.ApplicationMessage.ConvertPayloadToString(),
+                        (ushort)e.ApplicationMessage.QualityOfServiceLevel,
+                        e.ApplicationMessage.Retain);
+                }
+            }
+        }
+
+        private Dictionary<string, List<Func<string, string, ushort, bool, Task>>> _subscriptions;
+        
+        public async Task SubscribeAsync(string topic, Func<string,string,ushort,bool,Task> receiver)
+        {
+            if (MQTT_CONNECT && _client.IsConnected)
+            {
+                //TODO: handle wildcards
+                if (_subscriptions.ContainsKey(topic))
+                {
+                    _subscriptions[topic].Add(receiver);
+                }
+                else
+                {
+                    _subscriptions.Add(topic, new List<Func<string,string,ushort,bool,Task>>());
+                    _subscriptions[topic].Add(receiver);
+                }
+
+                await _client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topic).Build());
+            }
+        }
+        
         public async Task PublishAsync(string topic, string payload, bool retained = true)
         {
             _logger.Trace($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} PUB {payload.Length}b => {topic}\n{payload}");
