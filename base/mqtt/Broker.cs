@@ -15,6 +15,9 @@ namespace l99.driver.@base.mqtt
         private ILogger _logger;
         private MqttClientOptions _options;
         private IMqttClient _client;
+        //private Brokers _brokers;
+        private string _groupKey;
+        private string _selfKey;
 
         public IMqttClient Client
         {
@@ -27,8 +30,11 @@ namespace l99.driver.@base.mqtt
         private bool MQTT_PUBLISH_CHANGES = false;
         private bool MQTT_PUBLISH_DISCO = false;
 
-        public Broker(dynamic cfg)
+        public Broker(string groupKey, string selfKey, dynamic cfg)
         {
+            //_brokers = brokers;
+            _groupKey = groupKey;
+            _selfKey = selfKey;
             _logger = LogManager.GetCurrentClassLogger();
             _propertyBag = new Dictionary<string, dynamic>();
             _subscriptions = new Dictionary<string, List<Func<string, string, ushort, bool, Task>>>();
@@ -39,6 +45,7 @@ namespace l99.driver.@base.mqtt
             MQTT_PUBLISH_CHANGES = cfg.pub_changes;
             MQTT_PUBLISH_DISCO = cfg.pub_disco;
 
+            //TODO: move disco to group
             this["disco"] = new Disco(this, cfg.disco_base_topic);
 
             var factory = new MqttFactory();
@@ -66,11 +73,13 @@ namespace l99.driver.@base.mqtt
             await ConnectAsync();
         }
 
+        public bool IsConnected => MQTT_CONNECT && _client.IsConnected;
+        
         public async Task ConnectAsync()
         {
-            if (MQTT_CONNECT)
+            if (IsConnected)
             {
-                _logger.Debug($"Connecting broker: {_options.ChannelOptions}");
+                _logger.Debug($"Connecting broker '{_selfKey}': {_options.ChannelOptions}");
                 try
                 {
                     await _client.ConnectAsync(_options, CancellationToken.None);
@@ -81,12 +90,12 @@ namespace l99.driver.@base.mqtt
                 }
                 catch (MqttCommunicationException ex)
                 {
-                    _logger.Warn(ex, $"Broker connection failed: {_options.ChannelOptions}");
+                    _logger.Warn(ex, $"Broker connection failed '{_selfKey}': {_options.ChannelOptions}");
                 }
             }
             else
             {
-                _logger.Info($"Skipping broker connection: {_options.ChannelOptions}");
+                _logger.Info($"Skipping broker connection '{_selfKey}': {_options.ChannelOptions}");
             }
         }
 
@@ -109,7 +118,7 @@ namespace l99.driver.@base.mqtt
         
         public async Task SubscribeAsync(string topic, Func<string,string,ushort,bool,Task> receiver)
         {
-            if (MQTT_CONNECT && _client.IsConnected)
+            if (IsConnected)
             {
                 //TODO: handle wildcards
                 if (_subscriptions.ContainsKey(topic))
@@ -130,7 +139,7 @@ namespace l99.driver.@base.mqtt
         {
             _logger.Trace($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} PUB {payload.Length}b => {topic}\n{payload}");
             
-            if (MQTT_CONNECT && _client.IsConnected)
+            if (IsConnected)
             {
                 var msg = new MqttApplicationMessageBuilder()
                     .WithRetainFlag(retained)
@@ -144,7 +153,7 @@ namespace l99.driver.@base.mqtt
         
         public async Task PublishArrivalStatusAsync(string topic, string payload, bool retained = true)
         {
-            if (MQTT_CONNECT && MQTT_PUBLISH_STATUS && _client.IsConnected)
+            if (MQTT_PUBLISH_STATUS && IsConnected)
             {
                 await PublishArrivalAsync(topic, payload, retained);
             }
@@ -152,9 +161,9 @@ namespace l99.driver.@base.mqtt
 
         public async Task PublishArrivalAsync(string topic, string payload, bool retained = true)
         {
-            _logger.Trace($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} ARRIVE {payload.Length}b => {topic}\n{payload}");
+            _logger.Trace($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} '{_selfKey}' ARRIVE {payload.Length}b => {topic}\n{payload}");
             
-            if (MQTT_CONNECT && MQTT_PUBLISH_ARRIVALS && _client.IsConnected)
+            if (MQTT_PUBLISH_ARRIVALS && IsConnected)
             {
                 var msg = new MqttApplicationMessageBuilder()
                     .WithRetainFlag(retained)
@@ -168,7 +177,7 @@ namespace l99.driver.@base.mqtt
         
         public async Task PublishChangeStatusAsync(string topic, string payload, bool retained = true)
         {
-            if (MQTT_CONNECT && MQTT_PUBLISH_STATUS && _client.IsConnected)
+            if (MQTT_PUBLISH_STATUS && IsConnected)
             {
                 await PublishChangeAsync(topic, payload, retained);
             }
@@ -176,9 +185,9 @@ namespace l99.driver.@base.mqtt
         
         public async Task PublishChangeAsync(string topic, string payload, bool retained = true)
         {
-            _logger.Trace($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} CHANGE {payload.Length}b => {topic}\n{payload}");
+            _logger.Trace($"{new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()} '{_selfKey}' CHANGE {payload.Length}b => {topic}\n{payload}");
             
-            if (MQTT_CONNECT && MQTT_PUBLISH_CHANGES && _client.IsConnected)
+            if (MQTT_PUBLISH_CHANGES && IsConnected)
             {
                 var msg = new MqttApplicationMessageBuilder()
                     .WithRetainFlag(retained)

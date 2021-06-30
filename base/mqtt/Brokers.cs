@@ -9,18 +9,21 @@ namespace l99.driver.@base.mqtt
     {
         private ILogger _logger;
         private Dictionary<string, Broker> _brokers;
+        private Dictionary<string, Dictionary<string, Broker>> _brokerGroups;
             
         public Brokers()
         {
             _logger = LogManager.GetCurrentClassLogger();
             _brokers = new Dictionary<string, Broker>();
+            _brokerGroups = new Dictionary<string, Dictionary<string, Broker>>();
         }
 
-        public async Task<Broker> AddAsync(dynamic cfg)
+        public async Task<Broker> AddAsync(dynamic cfg_machine, dynamic cfg_broker)
         {
-            var key = cfg.ip + ":" + cfg.port;
+            var groupKey = $"{cfg_broker.ip}:{cfg_broker.port}";
+            var key = $"{groupKey}/{cfg_machine.id}";
 
-            //TODO: does not handle multiple brokers with different configurations correctly
+            //DONE: does not handle multiple brokers with different configurations correctly
             // e.g. if first broker is enabled=false, and second enabled=true, then broker will remain disabled
             if (_brokers.ContainsKey(key))
             {
@@ -28,11 +31,25 @@ namespace l99.driver.@base.mqtt
             }
             else
             {
-                _logger.Debug($"Adding broker:\n{JObject.FromObject(cfg).ToString()}");
-                Broker broker = new Broker(cfg);
-                if(cfg.auto_connect)
+                _logger.Debug($"Adding broker for machine '{cfg_machine.id}':\n{JObject.FromObject(cfg_broker).ToString()}");
+                
+                Broker broker = new Broker(groupKey, key, cfg_broker);
+                
+                if(cfg_broker.auto_connect)
                     await broker.ConnectAsync();
+                
                 _brokers.Add(key, broker);
+
+                if (!_brokerGroups.ContainsKey(groupKey))
+                {
+                    _brokerGroups.Add(groupKey, new Dictionary<string, Broker>());
+                }
+
+                if (!_brokerGroups[groupKey].ContainsKey(cfg_machine.id))
+                {
+                    _brokerGroups[groupKey].Add(cfg_machine.id, broker);
+                }
+                
                 return broker;
             }
         }
