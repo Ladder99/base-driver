@@ -86,7 +86,7 @@ namespace l99.driver.@base.mqtt
         
         public async Task ConnectAsync()
         {
-            if (IsConnected)
+            if (MQTT_CONNECT & !_client.IsConnected)
             {
                 _logger.Debug($"Connecting broker '{_selfKey}': {_options.ChannelOptions}");
                 try
