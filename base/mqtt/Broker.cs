@@ -73,7 +73,16 @@ namespace l99.driver.@base.mqtt
             await ConnectAsync();
         }
 
-        public bool IsConnected => MQTT_CONNECT && _client.IsConnected;
+        public bool IsConnected
+        {
+            get
+            {
+                if(!MQTT_CONNECT)
+                    return false;
+
+                return _client.IsConnected;
+            }
+        }
         
         public async Task ConnectAsync()
         {
