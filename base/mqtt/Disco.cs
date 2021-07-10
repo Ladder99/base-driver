@@ -49,7 +49,7 @@ namespace l99.driver.@base.mqtt
 
             //TODO: object key and machineId are redundant
             
-            string topic = $"{_baseTopic}/DISCO";
+            string topic = $"{_baseTopic}/$disco";
             string payload = JObject.FromObject(_items).ToString();
             await _broker.PublishAsync(topic, payload);
         }
