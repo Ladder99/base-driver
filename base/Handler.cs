@@ -13,7 +13,7 @@ namespace l99.driver.@base
             this.machine = machine;
         }
         
-        public virtual async Task InitializeAsync()
+        public virtual async Task InitializeAsync(dynamic config)
         {
             
         }

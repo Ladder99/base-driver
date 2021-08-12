@@ -120,11 +120,11 @@ namespace l99.driver.@base
         
         protected Handler handler;
         
-        public async Task<Machine> AddHandlerAsync(Type type)
+        public async Task<Machine> AddHandlerAsync(Type type, dynamic config)
         {
             _logger.Debug($"[{id}] Creating handler: {type.FullName}");
             handler = (Handler) Activator.CreateInstance(type, new object[] { this });
-            await handler.InitializeAsync();
+            await handler.InitializeAsync(config);
             veneers.OnDataArrivalAsync = handler.OnDataArrivalInternalAsync;
             veneers.OnDataChangeAsync = handler.OnDataChangeInternalAsync;
             veneers.OnErrorAsync = handler.OnErrorInternalAsync;
