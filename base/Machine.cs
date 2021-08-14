@@ -63,7 +63,7 @@ namespace l99.driver.@base
         
         protected bool isRunning = true;
         
-        public Machine(Machines machines, bool enabled, string id, dynamic config)
+        public Machine(Machines machines, bool enabled, string id, object config)
         {
             _logger = LogManager.GetCurrentClassLogger();
             this.machines = machines;
@@ -120,11 +120,11 @@ namespace l99.driver.@base
         
         protected Handler handler;
         
-        public async Task<Machine> AddHandlerAsync(Type type, dynamic config)
+        public async Task<Machine> AddHandlerAsync(Type type, dynamic cfg)
         {
             _logger.Debug($"[{id}] Creating handler: {type.FullName}");
             handler = (Handler) Activator.CreateInstance(type, new object[] { this });
-            await handler.InitializeAsync(config);
+            await handler.InitializeAsync(cfg.handler);
             veneers.OnDataArrivalAsync = handler.OnDataArrivalInternalAsync;
             veneers.OnDataChangeAsync = handler.OnDataChangeInternalAsync;
             veneers.OnErrorAsync = handler.OnErrorInternalAsync;
@@ -147,18 +147,10 @@ namespace l99.driver.@base
         
         protected Collector collector;
 
-        public int SweepMs
+        public Machine AddCollector(Type type, dynamic cfg)
         {
-            get => sweepMs;
-        }
-        
-        protected int sweepMs;
-        
-        public Machine AddCollector(Type type, int sweepMs = 1000, params dynamic[] additionalParams)
-        {
-            this.sweepMs = sweepMs;
             _logger.Debug($"[{id}] Creating collector: {type.FullName}");
-            collector = (Collector) Activator.CreateInstance(type, new object[] { this, sweepMs, additionalParams });
+            collector = (Collector) Activator.CreateInstance(type, new object[] { this, cfg });
             return this;
         }
 

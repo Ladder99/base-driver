@@ -18,8 +18,11 @@ namespace l99.driver.@base.mqtt
             _brokerGroups = new Dictionary<string, Dictionary<string, Broker>>();
         }
 
-        public async Task<Broker> AddAsync(dynamic cfg_machine, dynamic cfg_broker)
+        public async Task<Broker> AddAsync(dynamic cfg)
         {
+            dynamic cfg_machine = cfg.machine;
+            dynamic cfg_broker = cfg.broker;
+            
             var groupKey = $"{cfg_broker.ip}:{cfg_broker.port}";
             var key = $"{groupKey}/{cfg_machine.id}";
 

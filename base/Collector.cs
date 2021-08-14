@@ -16,12 +16,11 @@ namespace l99.driver.@base
             get => machine;
         }
         
-        public Collector(Machine machine, int sweepMs = 1000, params dynamic[] additionalParams)
+        public Collector(Machine machine, dynamic cfg)
         {
             logger = LogManager.GetLogger(this.GetType().FullName);
             this.machine = machine;
-            this.sweepMs = sweepMs;
-            this.additionalParams = additionalParams;
+            this.sweepMs = cfg.type["sweep_ms"];
         }
 
         public virtual async Task<dynamic?> InitializeAsync()

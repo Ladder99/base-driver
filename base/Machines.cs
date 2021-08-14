@@ -15,13 +15,11 @@ namespace l99.driver.@base
         private ILogger _logger;
         private List<Machine> _machines;
         private Dictionary<string, dynamic> _propertyBag;
-        private int _collectionInterval;
         private bool _isRunning = true;
         
-        public Machines(int collectionInterval = 1000)
+        public Machines()
         {
             _logger = LogManager.GetCurrentClassLogger();
-            _collectionInterval = collectionInterval;
             _machines = new List<Machine>();
             _propertyBag = new Dictionary<string, dynamic>();
         }
@@ -55,8 +53,8 @@ namespace l99.driver.@base
         
         public Machine Add(dynamic cfg, Broker broker)
         {
-            _logger.Debug($"Adding machine:\n{JObject.FromObject(cfg).ToString()}");
-            var machine = (Machine) Activator.CreateInstance(Type.GetType(cfg.type), new object[] { this, cfg.enabled, cfg.id, cfg });
+            _logger.Debug($"Adding machine:\n{JObject.FromObject(cfg.machine).ToString()}");
+            var machine = (Machine) Activator.CreateInstance(Type.GetType(cfg.machine.type), new object[] { this, cfg.machine.enabled, cfg.machine.id, cfg });
             machine["broker"] = broker;
             _machines.Add(machine);
             return machine;
@@ -95,6 +93,77 @@ namespace l99.driver.@base
         {
             _logger.Info($"Machine '{machineId}' tasks stopping...");
             _machines.FirstOrDefault(m => m.Id == machineId).Shutdown();
+        }
+        
+        public static async Task<Machines> CreateMachines(dynamic config)
+        {
+            var logger = LogManager.GetCurrentClassLogger();
+            
+            var assembly_name = typeof(Machines).Assembly.GetName().Name;
+            var machine_confs = new List<dynamic>();
+
+            foreach (dynamic machine_conf in config["machines"])
+            {
+                var prebuilt_config = new
+                {
+                    machine = new {
+                        enabled = machine_conf.ContainsKey("enabled") ? machine_conf["enabled"] : false,
+                        type = machine_conf.ContainsKey("type") ? machine_conf["type"] : $"l99.driver.@base.Machine, {assembly_name}",
+                        id = machine_conf.ContainsKey("id") ? machine_conf["id"] : Guid.NewGuid().ToString(),
+                        strategy = machine_conf.ContainsKey("strategy") ? machine_conf["strategy"] : $"l99.driver.@base.Collector, {assembly_name}",
+                        handler = machine_conf.ContainsKey("handler") ? machine_conf["handler"] : $"l99.driver.@base.Handler, {assembly_name}"
+                    },
+                    broker = new
+                    {
+                        enabled = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("enabled")) ? machine_conf["broker"]["enabled"] : false,
+                        pub_status = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("publish_status")) ? machine_conf["broker"]["publish_status"] : false,
+                        pub_arrivals = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("publish_arrivals")) ? machine_conf["broker"]["publish_arrivals"] : false,
+                        pub_changes = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("publish_changes")) ? machine_conf["broker"]["publish_changes"] : false,
+                        pub_disco = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("publish_disco")) ? machine_conf["broker"]["publish_disco"] : false,
+                        disco_base_topic = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("disco_base_topic")) ? machine_conf["broker"]["disco_base_topic"] : "ladder99",
+                        ip = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("net_ip")) ? machine_conf["broker"]["net_ip"] : "127.0.0.1", 
+                        port = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("net_port")) ? machine_conf["broker"]["net_port"] : 1883,
+                        auto_connect = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("enabled")) ? machine_conf["broker"]["auto_connect"] : false,
+                        anonymous = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("anonymous")) ? machine_conf["broker"]["anonymous"] : true,
+                        user = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("user")) ? machine_conf["broker"]["user"] : "user",
+                        password = (machine_conf.ContainsKey("broker") && machine_conf["broker"].ContainsKey("password")) ? machine_conf["broker"]["password"] : "password"
+                    }
+                };
+
+                var built_config = new
+                {
+                    prebuilt_config.machine,
+                    prebuilt_config.broker,
+                    type = machine_conf.ContainsKey(prebuilt_config.machine.type)
+                        ? machine_conf[prebuilt_config.machine.type]
+                        : null,
+                    strategy = machine_conf.ContainsKey(prebuilt_config.machine.strategy)
+                        ? machine_conf[prebuilt_config.machine.strategy]
+                        : null,
+                    handler = machine_conf.ContainsKey(prebuilt_config.machine.handler)
+                        ? machine_conf[prebuilt_config.machine.handler]
+                        : null
+                };
+
+                logger.Trace($"Machine configuration built:\n{JObject.FromObject(built_config).ToString()}");
+                
+                machine_confs.Add(built_config);
+            }
+
+            Brokers brokers = new Brokers();
+            Machines machines = new Machines();
+            
+            foreach (var cfg in machine_confs)
+            {
+                logger.Trace($"Creating machine from config:\n{JObject.FromObject(cfg).ToString()}");
+                
+                Broker broker = await brokers.AddAsync(cfg);
+                Machine machine = machines.Add(cfg, broker);
+                machine.AddCollector(Type.GetType(cfg.machine.strategy), cfg);
+                await machine.AddHandlerAsync(Type.GetType(cfg.machine.handler), cfg);
+            }
+
+            return machines;
         }
     }
 }
