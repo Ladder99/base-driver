@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet;
@@ -29,6 +30,9 @@ namespace l99.driver.@base.mqtt
         private bool MQTT_PUBLISH_ARRIVALS = false;
         private bool MQTT_PUBLISH_CHANGES = false;
         private bool MQTT_PUBLISH_DISCO = false;
+        private bool MQTT_ANONYMOUS = true;
+        private string MQTT_USER = "user";
+        private string MQTT_PASS = "password";
 
         public Broker(string groupKey, string selfKey, dynamic cfg)
         {
@@ -44,6 +48,9 @@ namespace l99.driver.@base.mqtt
             MQTT_PUBLISH_ARRIVALS = cfg.pub_arrivals;
             MQTT_PUBLISH_CHANGES = cfg.pub_changes;
             MQTT_PUBLISH_DISCO = cfg.pub_disco;
+            MQTT_ANONYMOUS = cfg.anonymous;
+            MQTT_USER = cfg.user;
+            MQTT_PASS = cfg.password;
 
             //TODO: move disco to group
             this["disco"] = new Disco(this, cfg.disco_base_topic);
@@ -52,6 +59,20 @@ namespace l99.driver.@base.mqtt
             _options = new MqttClientOptionsBuilder()
                 .WithTcpServer(cfg.ip, cfg.port)
                 .Build();
+
+            if (!MQTT_ANONYMOUS)
+            {
+                var creds = new MqttClientCredentials();
+                byte[] passwordBuffer = null;
+
+                if (MQTT_PASS != null)
+                    passwordBuffer = Encoding.UTF8.GetBytes(MQTT_PASS);
+                
+                creds.Username = MQTT_USER;
+                creds.Password = passwordBuffer;
+                _options.Credentials = creds;
+            }
+            
             _client = factory.CreateMqttClient();
         }
 
