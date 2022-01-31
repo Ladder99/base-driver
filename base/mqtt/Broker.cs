@@ -112,12 +112,12 @@ namespace l99.driver.@base.mqtt
             {
                 if (!_client.IsConnected)
                 {
-                    _logger.Debug($"Connecting broker '{_selfKey}': {_options.ChannelOptions}");
+                    _logger.Info($"Connecting broker '{_selfKey}': {_options.ChannelOptions}");
                     try
                     {
                         await _client.ConnectAsync(_options, CancellationToken.None);
                         _client.UseApplicationMessageReceivedHandler(async (e) => { await handleIncomingMessage(e); });
-                        _logger.Debug($"Connected broker '{_selfKey}': {_options.ChannelOptions}");
+                        _logger.Info($"Connected broker '{_selfKey}': {_options.ChannelOptions}");
                     }
                     catch (MqttCommunicationTimedOutException tex)
                     {
