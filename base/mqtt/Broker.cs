@@ -108,21 +108,25 @@ namespace l99.driver.@base.mqtt
         
         public async Task ConnectAsync()
         {
-            if (MQTT_CONNECT & !_client.IsConnected)
+            if (MQTT_CONNECT)
             {
-                _logger.Debug($"Connecting broker '{_selfKey}': {_options.ChannelOptions}");
-                try
+                if (!_client.IsConnected)
                 {
-                    await _client.ConnectAsync(_options, CancellationToken.None);
-                    _client.UseApplicationMessageReceivedHandler(async (e) => { await handleIncomingMessage(e); });
-                }
-                catch (MqttCommunicationTimedOutException tex)
-                {
-                    _logger.Warn($"Broker connection timeout '{_selfKey}': {_options.ChannelOptions}");
-                }
-                catch (MqttCommunicationException ex)
-                {
-                    _logger.Warn($"Broker connection failed '{_selfKey}': {_options.ChannelOptions}");
+                    _logger.Debug($"Connecting broker '{_selfKey}': {_options.ChannelOptions}");
+                    try
+                    {
+                        await _client.ConnectAsync(_options, CancellationToken.None);
+                        _client.UseApplicationMessageReceivedHandler(async (e) => { await handleIncomingMessage(e); });
+                        _logger.Debug($"Connected broker '{_selfKey}': {_options.ChannelOptions}");
+                    }
+                    catch (MqttCommunicationTimedOutException tex)
+                    {
+                        _logger.Warn($"Broker connection timeout '{_selfKey}': {_options.ChannelOptions}");
+                    }
+                    catch (MqttCommunicationException ex)
+                    {
+                        _logger.Warn($"Broker connection failed '{_selfKey}': {_options.ChannelOptions}");
+                    }
                 }
             }
             else
