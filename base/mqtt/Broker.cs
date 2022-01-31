@@ -91,6 +91,7 @@ namespace l99.driver.@base.mqtt
                 .WithPayload(lwtPayload)
                 .Build();
 
+            //TODO: handle timeout
             await ConnectAsync();
         }
 
@@ -113,14 +114,15 @@ namespace l99.driver.@base.mqtt
                 try
                 {
                     await _client.ConnectAsync(_options, CancellationToken.None);
-                    _client.UseApplicationMessageReceivedHandler(async (e) =>
-                    {
-                        await handleIncomingMessage(e);
-                    });
+                    _client.UseApplicationMessageReceivedHandler(async (e) => { await handleIncomingMessage(e); });
+                }
+                catch (MqttCommunicationTimedOutException tex)
+                {
+                    _logger.Warn($"Broker connection timeout '{_selfKey}': {_options.ChannelOptions}");
                 }
                 catch (MqttCommunicationException ex)
                 {
-                    _logger.Warn(ex, $"Broker connection failed '{_selfKey}': {_options.ChannelOptions}");
+                    _logger.Warn($"Broker connection failed '{_selfKey}': {_options.ChannelOptions}");
                 }
             }
             else
