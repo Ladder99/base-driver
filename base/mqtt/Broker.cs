@@ -34,6 +34,9 @@ namespace l99.driver.@base.mqtt
         private string MQTT_USER = "user";
         private string MQTT_PASS = "password";
 
+        private int _connectionFailCount = 0;
+        private bool _connectionSkipped = false;
+
         public Broker(string groupKey, string selfKey, dynamic cfg)
         {
             //_brokers = brokers;
@@ -112,26 +115,57 @@ namespace l99.driver.@base.mqtt
             {
                 if (!_client.IsConnected)
                 {
-                    _logger.Info($"Connecting broker '{_selfKey}': {_options.ChannelOptions}");
+                    if (_connectionFailCount == 0)
+                    {
+                        _logger.Info($"Connecting broker '{_selfKey}': {_options.ChannelOptions}");
+                    }
+                    else
+                    {
+                        _logger.Debug($"Connecting broker '{_selfKey}': {_options.ChannelOptions}");
+                    }
+                    
                     try
                     {
                         await _client.ConnectAsync(_options, CancellationToken.None);
                         _client.UseApplicationMessageReceivedHandler(async (e) => { await handleIncomingMessage(e); });
                         _logger.Info($"Connected broker '{_selfKey}': {_options.ChannelOptions}");
+                        _connectionFailCount = 0;
                     }
                     catch (MqttCommunicationTimedOutException tex)
                     {
-                        _logger.Warn($"Broker connection timeout '{_selfKey}': {_options.ChannelOptions}");
+                        if (_connectionFailCount == 0)
+                        {
+                            _logger.Warn($"Broker connection timeout '{_selfKey}': {_options.ChannelOptions}");
+                        }
+                        else
+                        {
+                            _logger.Debug($"Broker connection timeout '{_selfKey}': {_options.ChannelOptions}");
+                        }
+
+                        _connectionFailCount++;
                     }
                     catch (MqttCommunicationException ex)
                     {
-                        _logger.Warn($"Broker connection failed '{_selfKey}': {_options.ChannelOptions}");
+                        if (_connectionFailCount == 0)
+                        {
+                            _logger.Warn($"Broker connection failed '{_selfKey}': {_options.ChannelOptions}");
+                        }
+                        else
+                        {
+                            _logger.Debug($"Broker connection failed '{_selfKey}': {_options.ChannelOptions}");
+                        }
+                        
+                        _connectionFailCount++;
                     }
                 }
             }
             else
             {
-                _logger.Info($"Skipping broker connection '{_selfKey}': {_options.ChannelOptions}");
+                if (!_connectionSkipped)
+                {
+                    _logger.Info($"Skipping broker connection '{_selfKey}': {_options.ChannelOptions}");
+                    _connectionSkipped = true;
+                }
             }
         }
 
