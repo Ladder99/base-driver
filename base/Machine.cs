@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using l99.driver.@base.mqtt;
 using NLog;
-using YamlDotNet.Core;
 
 namespace l99.driver.@base
 {
@@ -51,10 +49,10 @@ namespace l99.driver.@base
         
         protected string id = string.Empty;
 
-        public Broker Broker
+        /*public Broker Broker
         {
             get => this["broker"];
-        }
+        }*/
         
         public bool IsRunning
         {
@@ -123,8 +121,8 @@ namespace l99.driver.@base
         public async Task<Machine> AddHandlerAsync(Type type, dynamic cfg)
         {
             _logger.Debug($"[{id}] Creating handler: {type.FullName}");
-            handler = (Handler) Activator.CreateInstance(type, new object[] { this });
-            await handler.InitializeAsync(cfg.handler);
+            handler = (Handler) Activator.CreateInstance(type, new object[] { this, cfg });
+            await handler.CreateAsync();
             veneers.OnDataArrivalAsync = handler.OnDataArrivalInternalAsync;
             veneers.OnDataChangeAsync = handler.OnDataChangeInternalAsync;
             veneers.OnErrorAsync = handler.OnErrorInternalAsync;
@@ -147,10 +145,11 @@ namespace l99.driver.@base
         
         protected Collector collector;
 
-        public Machine AddCollector(Type type, dynamic cfg)
+        public async Task<Machine> AddCollectorAsync(Type type, dynamic cfg)
         {
             _logger.Debug($"[{id}] Creating collector: {type.FullName}");
             collector = (Collector) Activator.CreateInstance(type, new object[] { this, cfg });
+            await collector.CreateAsync();
             return this;
         }
 
@@ -163,6 +162,25 @@ namespace l99.driver.@base
         public async Task RunCollectorAsync()
         {
             await collector.SweepAsync();
+        }
+        
+        #endregion
+        
+        #region transport
+        
+        public Transport Transport
+        {
+            get => transport;
+        }
+        
+        protected Transport transport;
+        
+        public async Task<Machine> AddTransportAsync(Type type, dynamic cfg)
+        {
+            _logger.Debug($"[{id}] Creating transport: {type.FullName}");
+            transport = (Transport) Activator.CreateInstance(type, new object[] { this, cfg });
+            await transport.CreateAsync();
+            return this;
         }
         
         #endregion

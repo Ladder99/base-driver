@@ -1,21 +1,27 @@
-using System;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using NLog;
 
 namespace l99.driver.@base
 {
     public class Handler
     {
+        protected ILogger logger;
         protected Machine machine;
         
-        public Handler(Machine machine)
+        public Machine Machine
         {
+            get => machine;
+        }
+        
+        public Handler(Machine machine, dynamic cfg)
+        {
+            logger = LogManager.GetLogger(this.GetType().FullName);
             this.machine = machine;
         }
         
-        public virtual async Task InitializeAsync(dynamic config)
+        public virtual async Task<dynamic?> CreateAsync()
         {
-            
+            return null;
         }
         
         public async Task OnDataArrivalInternalAsync(Veneers veneers, Veneer veneer)
@@ -27,7 +33,7 @@ namespace l99.driver.@base
 
         protected virtual async Task<dynamic?> beforeDataArrivalAsync(Veneers veneers, Veneer veneer)
         {
-            await veneers.Machine.Broker.AddDiscoAsync(veneers.Machine.Id);
+            //await veneers.Machine.Broker.AddDiscoAsync(veneers.Machine.Id);
             
             return null;
         }
@@ -52,7 +58,7 @@ namespace l99.driver.@base
         
         protected virtual async Task<dynamic?> beforeDataChangeAsync(Veneers veneers, Veneer veneer)
         {
-            await veneers.Machine.Broker.AddDiscoAsync(veneers.Machine.Id);
+            //await veneers.Machine.Broker.AddDiscoAsync(veneers.Machine.Id);
             
             return null;
         }
