@@ -138,6 +138,11 @@ namespace l99.driver.@base
             get => collector.LastSuccess;
         }
         
+        public bool CollectorHealthy
+        {
+            get => collector.IsHealthy;
+        }
+        
         public Collector Collector
         {
             get => collector;

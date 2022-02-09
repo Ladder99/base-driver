@@ -16,6 +16,7 @@ namespace l99.driver.@base
         protected int sweepMs;
         protected dynamic[] additionalParams;
         public bool LastSuccess { get; set; }
+        public bool IsHealthy { get; set; }
 
         public Collector(Machine machine, dynamic cfg)
         {
