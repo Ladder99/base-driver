@@ -3,7 +3,7 @@ using NLog;
 
 namespace l99.driver.@base
 {
-    public class Collector
+    public class Strategy
     {
         protected ILogger logger;
         protected Machine machine;
@@ -18,7 +18,7 @@ namespace l99.driver.@base
         public bool LastSuccess { get; set; }
         public bool IsHealthy { get; set; }
 
-        public Collector(Machine machine, dynamic cfg)
+        public Strategy(Machine machine, dynamic cfg)
         {
             logger = LogManager.GetLogger(this.GetType().FullName);
             this.machine = machine;
@@ -47,7 +47,7 @@ namespace l99.driver.@base
             await Task.Delay(delayMs);
             LastSuccess = false;
             await CollectAsync();
-            await machine.Handler.OnCollectorSweepCompleteInternalAsync();
+            await machine.Handler.OnStrategySweepCompleteInternalAsync();
         }
     }
 }

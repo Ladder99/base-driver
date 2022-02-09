@@ -98,10 +98,10 @@ namespace l99.driver.@base
             
         }
 
-        public virtual async Task OnCollectorSweepCompleteInternalAsync()
+        public virtual async Task OnStrategySweepCompleteInternalAsync()
         { 
             dynamic? beforeRet = await beforeSweepCompleteAsync(machine);
-            dynamic? onRet = await OnCollectorSweepCompleteAsync(machine, beforeRet);
+            dynamic? onRet = await OnStrategySweepCompleteAsync(machine, beforeRet);
             await afterSweepCompleteAsync(machine, onRet);
         }
         
@@ -111,7 +111,7 @@ namespace l99.driver.@base
             return null;
         }
         
-        public virtual async Task<dynamic?> OnCollectorSweepCompleteAsync(Machine machine, dynamic? beforeSweepComplete)
+        public virtual async Task<dynamic?> OnStrategySweepCompleteAsync(Machine machine, dynamic? beforeSweepComplete)
         {
             
             return null;

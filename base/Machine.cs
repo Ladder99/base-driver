@@ -131,42 +131,42 @@ namespace l99.driver.@base
         
         #endregion
         
-        #region collector
+        #region strategy
         
-        public bool CollectorSuccess
+        public bool StrategySuccess
         {
-            get => collector.LastSuccess;
+            get => strategy.LastSuccess;
         }
         
-        public bool CollectorHealthy
+        public bool StrategyHealthy
         {
-            get => collector.IsHealthy;
+            get => strategy.IsHealthy;
         }
         
-        public Collector Collector
+        public Strategy Strategy
         {
-            get => collector;
+            get => strategy;
         }
         
-        protected Collector collector;
+        protected Strategy strategy;
 
-        public async Task<Machine> AddCollectorAsync(Type type, dynamic cfg)
+        public async Task<Machine> AddStrategyAsync(Type type, dynamic cfg)
         {
-            _logger.Debug($"[{id}] Creating collector: {type.FullName}");
-            collector = (Collector) Activator.CreateInstance(type, new object[] { this, cfg });
-            await collector.CreateAsync();
+            _logger.Debug($"[{id}] Creating strategy: {type.FullName}");
+            strategy = (Strategy) Activator.CreateInstance(type, new object[] { this, cfg });
+            await strategy.CreateAsync();
             return this;
         }
 
-        public async Task InitCollectorAsync()
+        public async Task InitStrategyAsync()
         {
-            _logger.Debug($"[{id}] Initializing collector...");
-            await collector.InitializeAsync();
+            _logger.Debug($"[{id}] Initializing strategy...");
+            await strategy.InitializeAsync();
         }
 
-        public async Task RunCollectorAsync()
+        public async Task RunStrategyAsync()
         {
-            await collector.SweepAsync();
+            await strategy.SweepAsync();
         }
         
         #endregion
