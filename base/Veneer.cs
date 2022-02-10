@@ -95,7 +95,7 @@ namespace l99.driver.@base
 
         protected async Task onErrorAsync(dynamic input)
         {
-            logger.Info($"[{name}] Veneer error invocation result:\n{JObject.FromObject(input).ToString()}");
+            logger.Debug($"[{name}] Veneer error invocation result:\n{JObject.FromObject(input).ToString()}");
             lastArrivedInput = input;
             // TODO: overwrite last arrived value?
             await OnErrorAsync(this);
