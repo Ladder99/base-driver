@@ -48,11 +48,10 @@ namespace l99.driver.@base
             }
         }
         
-        public Machine Add(dynamic cfg)//, Broker broker)
+        public Machine Add(dynamic cfg)
         {
             _logger.Debug($"Adding machine:\n{JObject.FromObject(cfg.machine).ToString()}");
             var machine = (Machine) Activator.CreateInstance(Type.GetType(cfg.machine.type), new object[] { this, cfg.machine.enabled, cfg.machine.id, cfg });
-            //machine["broker"] = broker;
             _machines.Add(machine);
             return machine;
         }
