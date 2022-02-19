@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Extensions.Logging;
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -57,12 +58,15 @@ namespace l99.driver.@base
             static dynamic readConfig(string config_file)
             {
                 var input = new StreamReader(config_file);
-    
+
+                var parser = new MergingParser(new Parser(input));
+                
                 var deserializer = new DeserializerBuilder()
                     .WithNamingConvention(CamelCaseNamingConvention.Instance)
                     .Build();
     
-                var config = deserializer.Deserialize(input);
+                var config = deserializer.Deserialize(parser);
+                
                 _logger.Trace($"Deserialized configuration:\n{JObject.FromObject(config).ToString()}");
                 return config;
             }
