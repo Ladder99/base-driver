@@ -25,6 +25,11 @@ namespace l99.driver.@base
             return null;
         }
 
+        public virtual async Task StrategyInitializedAsync(dynamic? strategyInit)
+        {
+            
+        }
+        
         public virtual async Task ConnectAsync()
         {
             

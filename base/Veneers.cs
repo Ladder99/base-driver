@@ -32,7 +32,7 @@ namespace l99.driver.@base
         {
             foreach (var key in split)
             {
-                _slicedVeneers[key] = new List<Veneer>();
+                _slicedVeneers[key.ToString()] = new List<Veneer>();
             }
         }
         
@@ -40,7 +40,7 @@ namespace l99.driver.@base
         {
             foreach (var key in split)
             {
-                _slicedVeneers[sliceKey+SPLIT_SEP+key] = new List<Veneer>();
+                _slicedVeneers[sliceKey+SPLIT_SEP+key.ToString()] = new List<Veneer>();
             }
         }
 
@@ -58,11 +58,11 @@ namespace l99.driver.@base
             foreach (var key in _slicedVeneers.Keys)
             {
                 Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isCompound, isInternal });
-                veneer.SetSliceKey(key);
+                veneer.SetSliceKey(key.ToString());
                 veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
                 veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
                 veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
-                _slicedVeneers[key].Add(veneer);
+                _slicedVeneers[key.ToString()].Add(veneer);
             }
         }
         
@@ -75,11 +75,11 @@ namespace l99.driver.@base
                     continue;
                 
                 Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isCompound, isInternal });
-                veneer.SetSliceKey(key);
+                veneer.SetSliceKey(key.ToString());
                 veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
                 veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
                 veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
-                _slicedVeneers[key].Add(veneer);
+                _slicedVeneers[key.ToString()].Add(veneer);
             }
         }
 
@@ -92,14 +92,18 @@ namespace l99.driver.@base
         {
             foreach (var key in _slicedVeneers.Keys)
             {
-                dynamic temp_split = split;
+                dynamic tempSplit = split;
 
                 if (split is Array)
                 {
-                    temp_split = string.Join(SPLIT_SEP, split);
+                    tempSplit = string.Join(SPLIT_SEP, split);
+                }
+                else
+                {
+                    tempSplit = split.ToString();
                 }
                 
-                if (key.Equals(temp_split))
+                if (key.Equals(tempSplit))
                 {
                     foreach (Veneer veneer in _slicedVeneers[key])
                     {
@@ -124,6 +128,10 @@ namespace l99.driver.@base
                 if (split is Array)
                 {
                     tempSplit = string.Join(SPLIT_SEP, split);
+                }
+                else
+                {
+                    tempSplit = split.ToString();
                 }
                 
                 if (key.Equals(tempSplit))

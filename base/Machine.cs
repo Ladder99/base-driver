@@ -161,7 +161,8 @@ namespace l99.driver.@base
         public async Task InitStrategyAsync()
         {
             _logger.Debug($"[{id}] Initializing strategy...");
-            await strategy.InitializeAsync();
+            dynamic strategyInit = await strategy.InitializeAsync();
+            await transport.StrategyInitializedAsync(strategyInit);
         }
 
         public async Task RunStrategyAsync()
