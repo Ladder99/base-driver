@@ -11,54 +11,17 @@ namespace l99.driver.@base
         
         public override string ToString()
         {
-            return new
-            {
-                Id
-            }.ToString();
+            return new { Id }.ToString();
         }
 
-        public virtual dynamic Info
-        {
-            get
-            {
-                return new
-                {
-                    _id = id
-                };
-            }
-        }
-
-        public Machines Machines
-        {
-            get => machines;
-        }
-        
+        public virtual dynamic Info => new { _id = id };
+        public Machines Machines => machines;
         protected Machines machines;
-        
-        public bool Enabled
-        {
-            get => enabled;
-        }
-        
+        public bool Enabled => enabled;
         protected bool enabled = false;
-        
-        public string Id
-        {
-            get => id;
-        }
-        
+        public string Id => id;
         protected string id = string.Empty;
-
-        /*public Broker Broker
-        {
-            get => this["broker"];
-        }*/
-        
-        public bool IsRunning
-        {
-            get => isRunning;
-        }
-        
+        public bool IsRunning => isRunning;
         protected bool isRunning = true;
         
         public Machine(Machines machines, bool enabled, string id, object config)
@@ -110,12 +73,8 @@ namespace l99.driver.@base
         #endregion
         
         #region handler
-        
-        public Handler Handler
-        {
-            get => handler;
-        }
-        
+
+        public Handler Handler => handler;
         protected Handler handler;
         
         public async Task<Machine> AddHandlerAsync(Type type, dynamic cfg)
@@ -133,21 +92,9 @@ namespace l99.driver.@base
         
         #region strategy
         
-        public bool StrategySuccess
-        {
-            get => strategy.LastSuccess;
-        }
-        
-        public bool StrategyHealthy
-        {
-            get => strategy.IsHealthy;
-        }
-        
-        public Strategy Strategy
-        {
-            get => strategy;
-        }
-        
+        public bool StrategySuccess => strategy.LastSuccess;
+        public bool StrategyHealthy => strategy.IsHealthy;
+        public Strategy Strategy => strategy;
         protected Strategy strategy;
 
         public async Task<Machine> AddStrategyAsync(Type type, dynamic cfg)
@@ -161,8 +108,7 @@ namespace l99.driver.@base
         public async Task InitStrategyAsync()
         {
             _logger.Debug($"[{id}] Initializing strategy...");
-            dynamic strategyInit = await strategy.InitializeAsync();
-            await transport.StrategyInitializedAsync(strategyInit);
+            await strategy.InitializeAsync();
         }
 
         public async Task RunStrategyAsync()
@@ -174,11 +120,7 @@ namespace l99.driver.@base
         
         #region transport
         
-        public Transport Transport
-        {
-            get => transport;
-        }
-        
+        public Transport Transport => transport;
         protected Transport transport;
         
         public async Task<Machine> AddTransportAsync(Type type, dynamic cfg)
@@ -193,11 +135,7 @@ namespace l99.driver.@base
         
         #region veneeers
         
-        public Veneers Veneers
-        {
-            get => veneers;
-        }
-        
+        public Veneers Veneers => veneers;
         protected Veneers veneers;
 
         public bool VeneersApplied
@@ -212,12 +150,12 @@ namespace l99.driver.@base
             veneers.Add(type, name, isCompound, isInternal);
         }
 
-        public void SliceVeneer(dynamic split)
+        public void SliceVeneer(IEnumerable<dynamic> split)
         {
             veneers.Slice(split);
         }
         
-        public void SliceVeneer(dynamic sliceKey, dynamic split)
+        public void SliceVeneer(dynamic sliceKey, IEnumerable<dynamic> split)
         {
             veneers.Slice(sliceKey, split);
         }
@@ -244,7 +182,7 @@ namespace l99.driver.@base
             return await veneers.PeelAcrossAsync(split, name, input, additionalInputs);
         }
 
-        public void MarkVeneer(dynamic split, dynamic marker)
+        public void MarkVeneer(dynamic split, IEnumerable<dynamic> marker)
         {
             veneers.Mark(split, marker);
         }

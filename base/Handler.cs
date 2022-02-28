@@ -122,7 +122,7 @@ namespace l99.driver.@base
             
         }
 
-        public virtual async Task OnGenerateIntermediateModel(string json)
+        public virtual async Task OnGenerateIntermediateModelAsync(dynamic model)
         {
             
         }

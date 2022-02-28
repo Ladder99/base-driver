@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -28,9 +29,9 @@ namespace l99.driver.@base
 
         protected dynamic? sliceKey = null;
         
-        public dynamic Marker => marker;
+        public IEnumerable<dynamic> Marker => marker;
 
-        protected dynamic marker = new { };
+        protected IEnumerable<dynamic> marker;
         
         protected bool hasMarker = false;
         
@@ -106,7 +107,7 @@ namespace l99.driver.@base
             this.sliceKey = sliceKey;
         }
         
-        public void Mark(dynamic marker)
+        public void Mark(IEnumerable<dynamic> marker)
         {
             this.marker = marker;
             hasMarker = true;
