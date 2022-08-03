@@ -91,7 +91,15 @@ public class Veneer
 
     protected async Task onErrorAsync(dynamic input)
     {
-        logger.Debug($"[{name}] Veneer error invocation result:\n{JObject.FromObject(input).ToString()}");
+        try
+        {
+            logger.Debug($"[{name}] Veneer error invocation result:\n{JObject.FromObject(input).ToString()}");
+        }
+        catch
+        {
+            logger.Debug($"[{name}] Veneer error invocation result:\n{input}");
+        }
+        
         lastArrivedInput = input;
         // TODO: overwrite last arrived value?
         await OnErrorAsync(this);
