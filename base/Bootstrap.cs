@@ -21,8 +21,8 @@ public class Bootstrap
         detectArch();
         string nlog_file = getArgument(args, "--nlog", "nlog.config");
         _logger = setupLogger(nlog_file);
-        string config_file = getArgument(args, "--config", "config.yml");
-        dynamic config = readConfig(config_file);
+        string config_files = getArgument(args, "--config", "config.system.yml,config.user.yml,config.machines.yml");
+        dynamic config = readConfig(config_files.Split(','));
         return config;
     }
     
@@ -50,17 +50,23 @@ public class Bootstrap
             .GetCurrentClassLogger();
     }
 
-    static dynamic readConfig(string config_file)
+    static dynamic readConfig(string[] config_files)
     {
-        var input = new StreamReader(config_file);
+        var yaml = "";
+        foreach (var config_file in config_files)
+        {
+            yaml += File.ReadAllText(config_file);
+        }
 
-        var parser = new MergingParser(new Parser(input));
+        var string_reader = new StringReader(yaml);
+        var parser = new Parser(string_reader);
+        var merging_parser = new MergingParser(parser);
         
         var deserializer = new DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .Build();
 
-        var config = deserializer.Deserialize(parser);
+        var config = deserializer.Deserialize(merging_parser);
         
         _logger.Trace($"Deserialized configuration:\n{JObject.FromObject(config)}");
         return config;
