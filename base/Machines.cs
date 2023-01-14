@@ -1,13 +1,14 @@
 ﻿
+// ReSharper disable once CheckNamespace
 namespace l99.driver.@base;
 public class Machines
 {
-    private ILogger _logger;
-    private List<Machine> _machines;
-    private Dictionary<string, dynamic> _propertyBag;
+    private readonly ILogger _logger;
+    private readonly List<Machine> _machines;
+    private readonly Dictionary<string, dynamic> _propertyBag;
     private bool _isRunning = true;
-    
-    public Machines()
+
+    private Machines()
     {
         _logger = LogManager.GetCurrentClassLogger();
         _machines = new List<Machine>();
@@ -32,7 +33,9 @@ public class Machines
         {
             if (_propertyBag.ContainsKey(propertyBagKey))
             {
+#pragma warning disable CS8601
                 _propertyBag[propertyBagKey] = value;
+#pragma warning restore CS8601
             }
             else
             {
@@ -40,8 +43,8 @@ public class Machines
             }
         }
     }
-    
-    public Machine Add(dynamic cfg)
+
+    private Machine Add(dynamic cfg)
     {
         _logger.Debug($"Adding machine:\n{JObject.FromObject(cfg.machine).ToString()}");
         var machine = (Machine) Activator.CreateInstance(Type.GetType(cfg.machine.type), new object[] { this, cfg.machine.enabled, cfg.machine.id, cfg });
@@ -55,14 +58,14 @@ public class Machines
 
         foreach (var machine in _machines.Where(x => x.Enabled))
         {
-            tasks.Add(runMachineAsync(machine));
+            tasks.Add(RunMachineAsync(machine));
         }
         
         _logger.Info("Machine tasks running...");
         await Task.WhenAll(tasks);
     }
 
-    async Task runMachineAsync(Machine machine)
+    async Task RunMachineAsync(Machine machine)
     {
         await machine.InitStrategyAsync();
 
@@ -72,64 +75,67 @@ public class Machines
         }
     }
 
-    void ShutdownAll()
+    // ReSharper disable once UnusedMember.Local
+    private void ShutdownAll()
     {
         _logger.Info("All machine tasks stopping...");
         _isRunning = false;
     }
 
+    // ReSharper disable once UnusedMember.Local
     void Shutdown(string machineId)
     {
         _logger.Info($"Machine '{machineId}' tasks stopping...");
-        _machines.FirstOrDefault(m => m.Id == machineId).Shutdown();
+        _machines.FirstOrDefault(m => m.Id == machineId)?.Shutdown();
     }
     
     public static async Task<Machines> CreateMachines(dynamic config)
     {
         var logger = LogManager.GetCurrentClassLogger();
         
-        var assembly_name = typeof(Machines).Assembly.GetName().Name;
-        var machine_confs = new List<dynamic>();
+        var assemblyName = typeof(Machines).Assembly.GetName().Name;
+        var machineConfigs = new List<dynamic>();
 
-        foreach (dynamic machine_conf in config["machines"])
+        foreach (dynamic machineConf in config["machines"])
         {
-            var prebuilt_config = new
+            var prebuiltConfig = new
             {
                 machine = new {
-                    enabled = machine_conf.ContainsKey("enabled") ? machine_conf["enabled"] : false,
-                    type = machine_conf.ContainsKey("type") ? machine_conf["type"] : $"l99.driver.@base.Machine, {assembly_name}",
-                    id = machine_conf.ContainsKey("id") ? machine_conf["id"] : Guid.NewGuid().ToString(),
-                    strategy = machine_conf.ContainsKey("strategy") ? machine_conf["strategy"] : $"l99.driver.@base.Strategy, {assembly_name}",
-                    handler = machine_conf.ContainsKey("handler") ? machine_conf["handler"] : $"l99.driver.@base.Handler, {assembly_name}",
-                    transport = machine_conf.ContainsKey("transport") ? machine_conf["transport"] : $"l99.driver.@base.Transport, {assembly_name}"
+                    enabled = machineConf.ContainsKey("enabled") ? machineConf["enabled"] : false,
+                    type = machineConf.ContainsKey("type") ? machineConf["type"] : $"l99.driver.@base.Machine, {assemblyName}",
+                    id = machineConf.ContainsKey("id") ? machineConf["id"] : Guid.NewGuid().ToString(),
+                    strategy = machineConf.ContainsKey("strategy") ? machineConf["strategy"] : $"l99.driver.@base.Strategy, {assemblyName}",
+                    handler = machineConf.ContainsKey("handler") ? machineConf["handler"] : $"l99.driver.@base.Handler, {assemblyName}",
+                    transport = machineConf.ContainsKey("transport") ? machineConf["transport"] : $"l99.driver.@base.Transport, {assemblyName}"
                 }
             };
 
-            var built_config = new
+            var builtConfig = new
             {
-                prebuilt_config.machine,
-                type = machine_conf.ContainsKey(prebuilt_config.machine.type)
-                    ? machine_conf[prebuilt_config.machine.type]
+                prebuiltConfig.machine,
+                type = machineConf.ContainsKey(prebuiltConfig.machine.type)
+                    ? machineConf[prebuiltConfig.machine.type]
                     : null,
-                strategy = machine_conf.ContainsKey(prebuilt_config.machine.strategy)
-                    ? machine_conf[prebuilt_config.machine.strategy]
+                strategy = machineConf.ContainsKey(prebuiltConfig.machine.strategy)
+                    ? machineConf[prebuiltConfig.machine.strategy]
                     : null,
-                handler = machine_conf.ContainsKey(prebuilt_config.machine.handler)
-                    ? machine_conf[prebuilt_config.machine.handler]
+                handler = machineConf.ContainsKey(prebuiltConfig.machine.handler)
+                    ? machineConf[prebuiltConfig.machine.handler]
                     : null,
-                transport = machine_conf.ContainsKey(prebuilt_config.machine.transport)
-                    ? machine_conf[prebuilt_config.machine.transport]
+                transport = machineConf.ContainsKey(prebuiltConfig.machine.transport)
+                    ? machineConf[prebuiltConfig.machine.transport]
                     : null
             };
 
-            logger.Trace($"Machine configuration built:\n{JObject.FromObject(built_config).ToString()}");
+            // ReSharper disable once RedundantToStringCall
+            logger.Trace($"Machine configuration built:\n{JObject.FromObject(builtConfig).ToString()}");
             
-            machine_confs.Add(built_config);
+            machineConfigs.Add(builtConfig);
         }
 
         Machines machines = new Machines();
         
-        foreach (var cfg in machine_confs)
+        foreach (var cfg in machineConfigs)
         {
             logger.Trace($"Creating machine from config:\n{JObject.FromObject(cfg).ToString()}");
             

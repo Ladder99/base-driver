@@ -1,22 +1,27 @@
-﻿
+﻿using System.Diagnostics.CodeAnalysis;
+
+#pragma warning disable CS1998
+
+// ReSharper disable once CheckNamespace
 namespace l99.driver.@base;
 
 public class Veneers
 {
-    public Machine Machine => _machine;
-    private Machine _machine;
-
+    public Machine Machine { get; }
+    [SuppressMessage("ReSharper", "UnusedParameter.Local")] 
     public Func<Veneers, Veneer, Task> OnDataArrivalAsync = async (vv, v) => {  };
+    [SuppressMessage("ReSharper", "UnusedParameter.Local")] 
     public Func<Veneers, Veneer, Task> OnDataChangeAsync = async (vv, v) => {  };
+    [SuppressMessage("ReSharper", "UnusedParameter.Local")] 
     public Func<Veneers, Veneer, Task> OnErrorAsync = async (vv, v) => {  };
     
-    private readonly string SPLIT_SEP = "/";
-    private List<Veneer> _wholeVeneers = new List<Veneer>();
-    private Dictionary<dynamic, List<Veneer>> _slicedVeneers = new Dictionary<dynamic, List<Veneer>>();
+    private readonly string _splitSep = "/";
+    private readonly List<Veneer> _wholeVeneers = new();
+    private readonly Dictionary<dynamic, List<Veneer>> _slicedVeneers = new();
     
     public Veneers(Machine machine)
     {
-        _machine = machine;
+        Machine = machine;
     }
     
     public void Slice(IEnumerable<dynamic> split)
@@ -31,16 +36,18 @@ public class Veneers
     {
         foreach (var key in split)
         {
-            _slicedVeneers[$"{sliceKey}{SPLIT_SEP}{key}"] = new List<Veneer>();
+            _slicedVeneers[$"{sliceKey}{_splitSep}{key}"] = new List<Veneer>();
         }
     }
 
     public void Add(Type veneerType, string name, bool isCompound = false, bool isInternal = false)
     {
-        Veneer veneer = (Veneer)Activator
-            .CreateInstance(veneerType, 
-                new object[] { name, isCompound, isInternal });
+#pragma warning disable CS8600
+        Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isCompound, isInternal });
+#pragma warning restore CS8600
+#pragma warning disable CS8602
         veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
+#pragma warning restore CS8602
         veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
         veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
         _wholeVeneers.Add(veneer);
@@ -50,8 +57,12 @@ public class Veneers
     {
         foreach (var key in _slicedVeneers.Keys)
         {
+#pragma warning disable CS8600
             Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isCompound, isInternal });
+#pragma warning restore CS8600
+#pragma warning disable CS8602
             veneer.SetSliceKey($"{key}");
+#pragma warning restore CS8602
             veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
             veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
             veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
@@ -63,12 +74,16 @@ public class Veneers
     {
         foreach (var key in _slicedVeneers.Keys)
         {
-            var key_parts = $"{key}".Split(SPLIT_SEP);
-            if (key_parts.Length == 1)
+            var keyParts = $"{key}".Split(_splitSep);
+            if (keyParts.Length == 1)
                 continue;
             
+#pragma warning disable CS8600
             Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isCompound, isInternal });
+#pragma warning restore CS8600
+#pragma warning disable CS8602
             veneer.SetSliceKey($"{key}");
+#pragma warning restore CS8602
             veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
             veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
             veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
@@ -80,14 +95,14 @@ public class Veneers
     {
         return await _wholeVeneers
             .FirstOrDefault(v => v.Name == name)
-            .PeelAsync(input, additionalInputs);
+            ?.PeelAsync(input, additionalInputs)!;
     }
     
     public async Task<dynamic> PeelAcrossAsync(dynamic split, string name, dynamic input, params dynamic?[] additionalInputs)
     {
         foreach (var key in _slicedVeneers.Keys)
         {
-            dynamic s = (split is Array) ? string.Join(SPLIT_SEP, split) : $"{split}";
+            dynamic s = (split is Array) ? string.Join(_splitSep, split) : $"{split}";
 
             if (key.Equals(s))
             {
@@ -108,15 +123,17 @@ public class Veneers
     {
         foreach (var key in _slicedVeneers.Keys)
         {
-            dynamic s = (split is Array) ? string.Join(SPLIT_SEP, split) : $"{split}";
+            dynamic s = (split is Array) ? string.Join(_splitSep, split) : $"{split}";
 
             if (key.Equals(s))
             {
                 foreach (Veneer veneer in _slicedVeneers[key])
                 {
+                    // ReSharper disable once PossibleMultipleEnumeration
                     veneer.Mark(marker);
                 }
             }
         }
     }
 }
+#pragma warning restore CS1998

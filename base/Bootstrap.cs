@@ -1,15 +1,20 @@
+#pragma warning disable CS1998
+
 using System.IO;
 using Microsoft.Extensions.Configuration;
-using NLog.Extensions.Logging;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
+// ReSharper disable once CheckNamespace
 namespace l99.driver.@base;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public class Bootstrap
 {
+#pragma warning disable CS8618
     private static ILogger _logger;
+#pragma warning restore CS8618
 
     public static async Task Stop()
     {
@@ -18,30 +23,30 @@ public class Bootstrap
     
     public static async Task<dynamic> Start(string[] args)
     {
-        detectArch();
-        string nlog_file = getArgument(args, "--nlog", "nlog.config");
-        _logger = setupLogger(nlog_file);
-        string config_files = getArgument(args, "--config", "config.system.yml,config.user.yml,config.machines.yml");
-        dynamic config = readConfig(config_files.Split(','));
+        DetectArch();
+        string nlogFile = GetArgument(args, "--nlog", "nlog.config");
+        _logger = SetupLogger(nlogFile);
+        string configFiles = GetArgument(args, "--config", "config.system.yml,config.user.yml,config.machines.yml");
+        dynamic config = ReadConfig(configFiles.Split(','));
         return config;
     }
-    
-    static void detectArch()
+
+    private static void DetectArch()
     {
         Console.WriteLine($"Bitness: {(IntPtr.Size == 8 ? "64-bit" : "32-bit")}");
     }
-    
-    static string getArgument(string[] args, string option_name, string defaultValue)
+
+    private static string GetArgument(string[] args, string optionName, string defaultValue)
     {
-        var value = args.SkipWhile(i => i != option_name).Skip(1).Take(1).FirstOrDefault();
-        var option_value = string.IsNullOrEmpty(value) ? defaultValue : value;
-        Console.WriteLine($"Argument '{option_name}' = '{option_value}'");
-        return option_value;
+        var value = args.SkipWhile(i => i != optionName).Skip(1).Take(1).FirstOrDefault();
+        var optionValue = string.IsNullOrEmpty(value) ? defaultValue : value;
+        Console.WriteLine($"Argument '{optionName}' = '{optionValue}'");
+        return optionValue;
     }
-    
-    static Logger setupLogger(string config_file)
+
+    private static Logger SetupLogger(string configFile)
     {
-        LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(config_file);
+        LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(configFile);
 
         var config = new ConfigurationBuilder().Build();
 
@@ -50,25 +55,26 @@ public class Bootstrap
             .GetCurrentClassLogger();
     }
 
-    static dynamic readConfig(string[] config_files)
+    private static dynamic ReadConfig(string[] configFiles)
     {
         var yaml = "";
-        foreach (var config_file in config_files)
+        foreach (var configFile in configFiles)
         {
-            yaml += File.ReadAllText(config_file);
+            yaml += File.ReadAllText(configFile);
         }
 
-        var string_reader = new StringReader(yaml);
-        var parser = new Parser(string_reader);
-        var merging_parser = new MergingParser(parser);
+        var stringReader = new StringReader(yaml);
+        var parser = new Parser(stringReader);
+        var mergingParser = new MergingParser(parser);
         
         var deserializer = new DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .Build();
 
-        var config = deserializer.Deserialize(merging_parser);
+        var config = deserializer.Deserialize(mergingParser);
         
-        _logger.Trace($"Deserialized configuration:\n{JObject.FromObject(config)}");
+        _logger.Trace($"Deserialized configuration:\n{JObject.FromObject(config ?? throw new InvalidOperationException("Configuration cannot be null."))}");
         return config;
     }
 }
+#pragma warning restore CS1998

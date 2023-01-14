@@ -1,20 +1,22 @@
+// ReSharper disable VirtualMemberNeverOverridden.Global
+#pragma warning disable CS1998
 
+// ReSharper disable once CheckNamespace
 namespace l99.driver.@base;
 
 public class Handler
 {
-    protected ILogger logger;
-    protected Machine machine;
+    // ReSharper disable once NotAccessedField.Local
+    private ILogger _logger;
+    private readonly Machine _machine;
     
-    public Machine Machine
+    public Machine Machine => _machine;
+
+    // ReSharper disable once UnusedParameter.Local
+    protected Handler(Machine machine, dynamic cfg)
     {
-        get => machine;
-    }
-    
-    public Handler(Machine machine, dynamic cfg)
-    {
-        logger = LogManager.GetLogger(this.GetType().FullName);
-        this.machine = machine;
+        _logger = LogManager.GetLogger(this.GetType().FullName);
+        _machine = machine;
     }
     
     public virtual async Task<dynamic?> CreateAsync()
@@ -24,98 +26,98 @@ public class Handler
     
     public async Task OnDataArrivalInternalAsync(Veneers veneers, Veneer veneer)
     {
-        dynamic? beforeRet = await beforeDataArrivalAsync(veneers, veneer);
+        dynamic? beforeRet = await BeforeDataArrivalAsync(veneers, veneer);
         dynamic? onRet = await OnDataArrivalAsync(veneers, veneer, beforeRet);
-        await afterDataArrivalAsync(veneers, veneer, onRet);
+        await AfterDataArrivalAsync(veneers, veneer, onRet);
     }
 
-    protected virtual async Task<dynamic?> beforeDataArrivalAsync(Veneers veneers, Veneer veneer)
+    protected virtual async Task<dynamic?> BeforeDataArrivalAsync(Veneers veneers, Veneer veneer)
     {
         //await veneers.Machine.Broker.AddDiscoAsync(veneers.Machine.Id);
         
         return null;
     }
-    
-    public virtual async Task<dynamic?> OnDataArrivalAsync(Veneers veneers, Veneer veneer, dynamic? beforeArrival)
+
+    protected virtual async Task<dynamic?> OnDataArrivalAsync(Veneers veneers, Veneer veneer, dynamic? beforeArrival)
     {
         
         return null;
     }
     
-    protected virtual async Task afterDataArrivalAsync(Veneers veneers, Veneer veneer, dynamic? onArrival)
+    protected virtual async Task AfterDataArrivalAsync(Veneers veneers, Veneer veneer, dynamic? onArrival)
     {
         
     }
     
     public virtual async Task OnDataChangeInternalAsync(Veneers veneers, Veneer veneer)
     {
-        dynamic? beforeRet = await beforeDataChangeAsync(veneers, veneer);
+        dynamic? beforeRet = await BeforeDataChangeAsync(veneers, veneer);
         dynamic? onRet = await OnDataChangeAsync(veneers, veneer, beforeRet);
-        await afterDataChangeAsync(veneers, veneer, onRet);
+        await AfterDataChangeAsync(veneers, veneer, onRet);
     }
     
-    protected virtual async Task<dynamic?> beforeDataChangeAsync(Veneers veneers, Veneer veneer)
+    protected virtual async Task<dynamic?> BeforeDataChangeAsync(Veneers veneers, Veneer veneer)
     {
         //await veneers.Machine.Broker.AddDiscoAsync(veneers.Machine.Id);
         
         return null;
     }
-    
-    public virtual async Task<dynamic?> OnDataChangeAsync(Veneers veneers, Veneer veneer, dynamic? beforeChange)
+
+    protected virtual async Task<dynamic?> OnDataChangeAsync(Veneers veneers, Veneer veneer, dynamic? beforeChange)
     {
         
         return null;
     }
     
-    protected virtual async Task afterDataChangeAsync(Veneers veneers, Veneer veneer, dynamic? onChange)
+    protected virtual async Task AfterDataChangeAsync(Veneers veneers, Veneer veneer, dynamic? onChange)
     {
         
     }
     
     public virtual async Task OnErrorInternalAsync(Veneers veneers, Veneer veneer)
     {
-        dynamic? beforeRet = await beforeDataErrorAsync(veneers, veneer);
+        dynamic? beforeRet = await BeforeDataErrorAsync(veneers, veneer);
         dynamic? onRet = await OnErrorAsync(veneers, veneer, beforeRet);
-        await afterDataErrorAsync(veneers, veneer, onRet);
+        await AfterDataErrorAsync(veneers, veneer, onRet);
     }
     
-    protected virtual async Task<dynamic?> beforeDataErrorAsync(Veneers veneers, Veneer veneer)
+    protected virtual async Task<dynamic?> BeforeDataErrorAsync(Veneers veneers, Veneer veneer)
+    {
+        
+        return null;
+    }
+
+    protected virtual async Task<dynamic?> OnErrorAsync(Veneers veneers, Veneer veneer, dynamic? beforeError)
     {
         
         return null;
     }
     
-    public virtual async Task<dynamic?> OnErrorAsync(Veneers veneers, Veneer veneer, dynamic? beforeError)
-    {
-        
-        return null;
-    }
-    
-    protected virtual async Task afterDataErrorAsync(Veneers veneers, Veneer veneer, dynamic? onError)
+    protected virtual async Task AfterDataErrorAsync(Veneers veneers, Veneer veneer, dynamic? onError)
     {
         
     }
 
     public virtual async Task OnStrategySweepCompleteInternalAsync()
     { 
-        dynamic? beforeRet = await beforeSweepCompleteAsync(machine);
-        dynamic? onRet = await OnStrategySweepCompleteAsync(machine, beforeRet);
-        await afterSweepCompleteAsync(machine, onRet);
+        dynamic? beforeRet = await BeforeSweepCompleteAsync(_machine);
+        dynamic? onRet = await OnStrategySweepCompleteAsync(_machine, beforeRet);
+        await AfterSweepCompleteAsync(_machine, onRet);
     }
     
-    protected virtual async Task<dynamic?> beforeSweepCompleteAsync(Machine machine)
-    {
-        
-        return null;
-    }
-    
-    public virtual async Task<dynamic?> OnStrategySweepCompleteAsync(Machine machine, dynamic? beforeSweepComplete)
+    protected virtual async Task<dynamic?> BeforeSweepCompleteAsync(Machine machine)
     {
         
         return null;
     }
 
-    protected virtual async Task afterSweepCompleteAsync(Machine machine, dynamic? onSweepComplete)
+    protected virtual async Task<dynamic?> OnStrategySweepCompleteAsync(Machine machine, dynamic? beforeSweepComplete)
+    {
+        
+        return null;
+    }
+
+    protected virtual async Task AfterSweepCompleteAsync(Machine machine, dynamic? onSweepComplete)
     {
         
     }
@@ -125,3 +127,4 @@ public class Handler
         
     }
 }
+#pragma warning restore CS1998

@@ -1,27 +1,28 @@
-﻿
+﻿#pragma warning disable CS1998
+
+// ReSharper disable once CheckNamespace
 namespace l99.driver.@base;
 
 public class Strategy
 {
-    protected ILogger logger;
-    protected Machine machine;
+    protected readonly ILogger Logger;
+    protected readonly Machine machine;
     
-    public Machine Machine
-    {
-        get => machine;
-    }
-    
-    protected int sweepMs;
-    protected dynamic[] additionalParams;
-    public bool LastSuccess { get; set; }
-    public bool IsHealthy { get; set; }
+    public Machine Machine => machine;
 
-    public Strategy(Machine machine, dynamic cfg)
+    protected readonly int SweepMs;
+    protected dynamic[] AdditionalParams;
+    public bool LastSuccess { get; protected set; }
+    public bool IsHealthy { get; protected set; }
+
+#pragma warning disable CS8618
+    protected Strategy(Machine machine, dynamic cfg)
+#pragma warning restore CS8618
     {
-        logger = LogManager.GetLogger(this.GetType().FullName);
+        Logger = LogManager.GetLogger(GetType().FullName);
         this.machine = machine;
         
-        this.sweepMs = cfg.type["sweep_ms"];
+        SweepMs = cfg.type["sweep_ms"];
     }
 
     public virtual async Task<dynamic?> CreateAsync()
@@ -34,17 +35,18 @@ public class Strategy
         return null;
     }
 
-    public virtual async Task<dynamic?> CollectAsync()
+    protected virtual async Task<dynamic?> CollectAsync()
     {
         return null;
     }
 
     public virtual async Task SweepAsync(int delayMs = -1)
     {
-        delayMs = delayMs < 0 ? sweepMs : delayMs;
+        delayMs = delayMs < 0 ? SweepMs : delayMs;
         await Task.Delay(delayMs);
         LastSuccess = false;
         await CollectAsync();
         await machine.Handler.OnStrategySweepCompleteInternalAsync();
     }
 }
+#pragma warning restore CS1998

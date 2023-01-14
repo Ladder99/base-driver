@@ -1,25 +1,22 @@
 ﻿using System.Diagnostics;
 
+// ReSharper disable once CheckNamespace
 namespace l99.driver.@base;
 
 public class Veneer
 {
     //TODO: preserve additional_inputs
     
-    protected ILogger logger;
+    protected ILogger Logger;
     
     public string Name => name;
 
-    protected string name = "";
+    protected readonly string name = "";
 
-    public bool IsInternal => _isInternal;
+    public bool IsInternal { get; }
 
-    private bool _isInternal = false;
-    
-    public bool IsCompound => _isCompound;
+    public bool IsCompound { get; }
 
-    private bool _isCompound = false;
-    
     public dynamic SliceKey => sliceKey;
 
     protected dynamic? sliceKey = null;
@@ -64,25 +61,25 @@ public class Veneer
     
     public Veneer(string name = "", bool isCompound = false, bool isInternal = false)
     {
-        logger = LogManager.GetLogger(this.GetType().FullName);
+        Logger = LogManager.GetLogger(this.GetType().FullName);
         this.name = name;
-        _isCompound = isCompound;
-        _isInternal = isInternal;
+        IsCompound = isCompound;
+        IsInternal = isInternal;
         stopwatchDataChange.Start();
     }
     
-    protected async Task onDataArrivedAsync(dynamic input, dynamic currentValue)
+    protected async Task OnDataArrivedAsync(dynamic input, dynamic currentValue)
     {
-        logger.Trace($"[{name}] Veneer arrival invocation result:\n{JObject.FromObject(currentValue).ToString()}");
+        Logger.Trace($"[{name}] Veneer arrival invocation result:\n{JObject.FromObject(currentValue).ToString()}");
         lastArrivedInput = input;
         lastArrivedValue = currentValue;
         await OnArrivalAsync(this);
         stopwatchDataArrival.Restart();
     }
     
-    protected async Task onDataChangedAsync(dynamic input, dynamic currentValue)
+    protected async Task OnDataChangedAsync(dynamic input, dynamic currentValue)
     {
-        logger.Trace($"[{name}] Veneer change invocation result:\n{JObject.FromObject(currentValue).ToString()}");
+        Logger.Trace($"[{name}] Veneer change invocation result:\n{JObject.FromObject(currentValue).ToString()}");
         lastChangedInput = input;
         lastChangedValue = currentValue;
         await OnChangeAsync(this);
@@ -93,11 +90,11 @@ public class Veneer
     {
         try
         {
-            logger.Debug($"[{name}] Veneer error invocation result:\n{JObject.FromObject(input).ToString()}");
+            Logger.Debug($"[{name}] Veneer error invocation result:\n{JObject.FromObject(input).ToString()}");
         }
         catch
         {
-            logger.Debug($"[{name}] Veneer error invocation result:\n{input}");
+            Logger.Debug($"[{name}] Veneer error invocation result:\n{input}");
         }
         
         lastArrivedInput = input;
