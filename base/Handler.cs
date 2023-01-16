@@ -8,15 +8,13 @@ public class Handler
 {
     // ReSharper disable once NotAccessedField.Local
     private ILogger _logger;
-    private readonly Machine _machine;
-    
-    public Machine Machine => _machine;
+    public Machine Machine { get; }
 
     // ReSharper disable once UnusedParameter.Local
     protected Handler(Machine machine, dynamic cfg)
     {
-        _logger = LogManager.GetLogger(this.GetType().FullName);
-        _machine = machine;
+        _logger = LogManager.GetLogger(GetType().FullName);
+        Machine = machine;
     }
     
     public virtual async Task<dynamic?> CreateAsync()
@@ -100,9 +98,9 @@ public class Handler
 
     public virtual async Task OnStrategySweepCompleteInternalAsync()
     { 
-        dynamic? beforeRet = await BeforeSweepCompleteAsync(_machine);
-        dynamic? onRet = await OnStrategySweepCompleteAsync(_machine, beforeRet);
-        await AfterSweepCompleteAsync(_machine, onRet);
+        dynamic? beforeRet = await BeforeSweepCompleteAsync(Machine);
+        dynamic? onRet = await OnStrategySweepCompleteAsync(Machine, beforeRet);
+        await AfterSweepCompleteAsync(Machine, onRet);
     }
     
     protected virtual async Task<dynamic?> BeforeSweepCompleteAsync(Machine machine)

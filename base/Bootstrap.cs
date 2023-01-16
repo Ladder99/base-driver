@@ -12,9 +12,7 @@ namespace l99.driver.@base;
 // ReSharper disable once ClassNeverInstantiated.Global
 public class Bootstrap
 {
-#pragma warning disable CS8618
-    private static ILogger _logger;
-#pragma warning restore CS8618
+    private static ILogger _logger = null!;
 
     public static async Task Stop()
     {

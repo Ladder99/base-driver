@@ -6,14 +6,13 @@ namespace l99.driver.@base;
 public class Transport
 {
     protected readonly ILogger Logger;
-    public Machine Machine => machine;
-    protected readonly Machine machine;
+    protected Machine Machine { get; }
 
     // ReSharper disable once UnusedParameter.Local
     protected Transport(Machine machine, dynamic cfg)
     {
         Logger = LogManager.GetLogger(GetType().FullName);
-        this.machine = machine;
+        Machine = machine;
     }
 
     public virtual async Task<dynamic?> CreateAsync()

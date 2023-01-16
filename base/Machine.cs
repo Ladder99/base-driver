@@ -5,40 +5,33 @@ namespace l99.driver.@base;
 public abstract class Machine
 {
     private readonly ILogger _logger;
+    public dynamic Configuration { get; }
     
     public override string ToString()
     {
-        return new { Id }.ToString() ?? throw new InvalidOperationException("Machine identifier cannot be null.");
+        return new {Id}.ToString()!;
     }
     
     public virtual dynamic Info => new { _id = Id };
-
     // ReSharper disable once NotAccessedField.Local
     private Machines _machines;
-
-    public bool Enabled { get; }
-
-    public string Id { get; }
+    public bool Enabled => Configuration.machine.enabled;
+    public string Id => Configuration.machine.id;
+    public bool IsRunning { get; private set; } = true;
     
-    public bool IsRunning => _isRunning; 
-    private bool _isRunning = true;
-    
-#pragma warning disable CS8618
-    // ReSharper disable once UnusedParameter.Local
-    protected Machine(Machines machines, bool enabled, string id, object config)
-#pragma warning restore CS8618
+    protected Machine(Machines machines, object config)
     {
+        Configuration = config;
         _logger = LogManager.GetCurrentClassLogger();
+        _logger.Debug($"[{Id}] Creating machine, enabled: {Enabled}");
         _machines = machines;
-        Enabled = enabled;
-        Id = id;
-        _veneers = new Veneers(this);
+        Veneers = new Veneers(this);
         _propertyBag = new Dictionary<string, dynamic>();
     }
 
     public void Shutdown()
     {
-        _isRunning = false;
+        IsRunning = false;
     }
 
     #region property-bag
@@ -65,12 +58,11 @@ public abstract class Machine
         {
             if (_propertyBag.ContainsKey(propertyBagKey))
             {
-#pragma warning disable CS8601
-                _propertyBag[propertyBagKey] = value;
-#pragma warning restore CS8601
+                _propertyBag[propertyBagKey] = value!;
             }
             else
             {
+                _logger.Debug($"[{Id}] Adding '{propertyBagKey}' to property bag.");
                 _propertyBag.Add(propertyBagKey, value);
             }
         }
@@ -80,19 +72,28 @@ public abstract class Machine
     
     #region handler
 
-    public Handler Handler => _handler;
-    private Handler _handler;
-    
+    public Handler Handler { get; private set; } = null!;
+
     public async Task<Machine> AddHandlerAsync(Type type, dynamic cfg)
     {
         _logger.Debug($"[{Id}] Creating handler: {type.FullName}");
-#pragma warning disable CS8600, CS8601, CS8602
-        _handler = (Handler) Activator.CreateInstance(type, new object[] { this, cfg });
-        await _handler.CreateAsync();
-#pragma warning restore CS8600, CS8601, CS8602
-        _veneers.OnDataArrivalAsync = _handler.OnDataArrivalInternalAsync;
-        _veneers.OnDataChangeAsync = _handler.OnDataChangeInternalAsync;
-        _veneers.OnErrorAsync = _handler.OnErrorInternalAsync;
+
+        try
+        {
+#pragma warning disable CS8600, CS8601
+            Handler = (Handler) Activator.CreateInstance(type, new object[] {this, cfg});
+#pragma warning restore CS8600, CS8601
+
+            await Handler!.CreateAsync();
+            Veneers.OnDataArrivalAsync = Handler.OnDataArrivalInternalAsync;
+            Veneers.OnDataChangeAsync = Handler.OnDataChangeInternalAsync;
+            Veneers.OnErrorAsync = Handler.OnErrorInternalAsync;
+        }
+        catch
+        {
+            _logger.Error($"[{Id}] Unable to add handler: {type.FullName}");
+        }
+
         return this;
     }
     
@@ -100,46 +101,64 @@ public abstract class Machine
     
     #region strategy
     
-    public bool StrategySuccess => _strategy.LastSuccess;
-    public bool StrategyHealthy => _strategy.IsHealthy;
-    public Strategy Strategy => _strategy;
-    private Strategy _strategy;
+    public bool StrategySuccess => Strategy.LastSuccess;
+    public bool StrategyHealthy => Strategy.IsHealthy;
+    public Strategy Strategy { get; private set; } = null!;
 
     public async Task<Machine> AddStrategyAsync(Type type, dynamic cfg)
     {
         _logger.Debug($"[{Id}] Creating strategy: {type.FullName}");
-#pragma warning disable CS8600, CS8601, CS8602
-        _strategy = (Strategy) Activator.CreateInstance(type, new object[] { this, cfg });
-        await _strategy.CreateAsync();
-#pragma warning restore CS8600, CS8601, CS8602
+
+        try
+        {
+#pragma warning disable CS8600, CS8601
+            Strategy = (Strategy) Activator.CreateInstance(type, new object[] {this, cfg});
+#pragma warning restore CS8600, CS8601
+            
+            await Strategy!.CreateAsync();
+        }
+        catch
+        {
+            _logger.Error($"[{Id}] Unable to add strategy: {type.FullName}");
+        }
+
         return this;
     }
 
     public async Task InitStrategyAsync()
     {
         _logger.Debug($"[{Id}] Initializing strategy...");
-        await _strategy.InitializeAsync();
+        await Strategy.InitializeAsync();
     }
 
     public async Task RunStrategyAsync()
     {
-        await _strategy.SweepAsync();
+        await Strategy.SweepAsync();
     }
     
     #endregion
     
     #region transport
     
-    public Transport Transport => _transport;
-    private Transport _transport;
-    
+    public Transport Transport { get; private set; } = null!;
+
     public async Task<Machine> AddTransportAsync(Type type, dynamic cfg)
     {
         _logger.Debug($"[{Id}] Creating transport: {type.FullName}");
-#pragma warning disable CS8600, CS8601, CS8602
-        _transport = (Transport) Activator.CreateInstance(type, new object[] { this, cfg });
-        await _transport.CreateAsync();
-#pragma warning restore CS8600, CS8601, CS8602
+
+        try
+        {
+#pragma warning disable CS8600, CS8601
+            Transport = (Transport) Activator.CreateInstance(type, new object[] {this, cfg});
+#pragma warning restore CS8600, CS8601
+            
+            await Transport!.CreateAsync();
+        }
+        catch
+        {
+            _logger.Error($"[{Id}] Unable to add transport: {type.FullName}");
+        }
+        
         return this;
     }
     
@@ -147,8 +166,7 @@ public abstract class Machine
     
     #region veneeers
     
-    public Veneers Veneers => _veneers;
-    private readonly Veneers _veneers;
+    public Veneers Veneers { get; }
 
     public bool VeneersApplied
     {
@@ -159,44 +177,44 @@ public abstract class Machine
     public void ApplyVeneer(Type type, string name, bool isCompound = false, bool isInternal = false)
     {
         _logger.Debug($"[{Id}] Applying veneer: {type.FullName}");
-        _veneers.Add(type, name, isCompound, isInternal);
+        Veneers.Add(type, name, isCompound, isInternal);
     }
 
     public void SliceVeneer(IEnumerable<dynamic> split)
     {
-        _veneers.Slice(split);
+        Veneers.Slice(split);
     }
     
     public void SliceVeneer(dynamic sliceKey, IEnumerable<dynamic> split)
     {
-        _veneers.Slice(sliceKey, split);
+        Veneers.Slice(sliceKey, split);
     }
 
     public void ApplyVeneerAcrossSlices(Type type, string name, bool isCompound = false, bool isInternal = false)
     {
         _logger.Debug($"[{Id}] Applying veneer: {type.FullName}");
-        _veneers.AddAcrossSlices(type, name, isCompound, isInternal);
+        Veneers.AddAcrossSlices(type, name, isCompound, isInternal);
     }
     
     public void ApplyVeneerAcrossSlices(dynamic sliceKey, Type type, string name, bool isCompound = false, bool isInternal = false)
     {
         _logger.Debug($"[{Id}] Applying veneer: {type.FullName}");
-        _veneers.AddAcrossSlices(sliceKey, type, name, isCompound, isInternal);
+        Veneers.AddAcrossSlices(sliceKey, type, name, isCompound, isInternal);
     }
 
     public async Task<dynamic> PeelVeneerAsync(string name, dynamic input, params dynamic?[] additionalInputs)
     {
-        return await _veneers.PeelAsync(name, input, additionalInputs);
+        return await Veneers.PeelAsync(name, input, additionalInputs);
     }
     
     public async Task<dynamic> PeelAcrossVeneerAsync(dynamic split, string name, dynamic input, params dynamic?[] additionalInputs)
     {
-        return await _veneers.PeelAcrossAsync(split, name, input, additionalInputs);
+        return await Veneers.PeelAcrossAsync(split, name, input, additionalInputs);
     }
 
     public void MarkVeneer(dynamic split, IEnumerable<dynamic> marker)
     {
-        _veneers.Mark(split, marker);
+        Veneers.Mark(split, marker);
     }
     
     #endregion

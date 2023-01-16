@@ -1,19 +1,16 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿#pragma warning disable CS1998
 
-#pragma warning disable CS1998
-
+// ReSharper disable UnusedParameter.Local
 // ReSharper disable once CheckNamespace
 namespace l99.driver.@base;
 
 public class Veneers
 {
+    private readonly ILogger _logger;
     public Machine Machine { get; }
-    [SuppressMessage("ReSharper", "UnusedParameter.Local")] 
-    public Func<Veneers, Veneer, Task> OnDataArrivalAsync = async (vv, v) => {  };
-    [SuppressMessage("ReSharper", "UnusedParameter.Local")] 
-    public Func<Veneers, Veneer, Task> OnDataChangeAsync = async (vv, v) => {  };
-    [SuppressMessage("ReSharper", "UnusedParameter.Local")] 
-    public Func<Veneers, Veneer, Task> OnErrorAsync = async (vv, v) => {  };
+    public Func<Veneers, Veneer, Task> OnDataArrivalAsync = async (vv, v) => { await Task.FromResult(0); };
+    public Func<Veneers, Veneer, Task> OnDataChangeAsync = async (vv, v) => { await Task.FromResult(0); };
+    public Func<Veneers, Veneer, Task> OnErrorAsync = async (vv, v) => { await Task.FromResult(0); };
     
     private readonly string _splitSep = "/";
     private readonly List<Veneer> _wholeVeneers = new();
@@ -22,6 +19,8 @@ public class Veneers
     public Veneers(Machine machine)
     {
         Machine = machine;
+        _logger = LogManager.GetCurrentClassLogger();
+        _logger.Debug($"[{Machine.Id}] Creating veneers holder");
     }
     
     public void Slice(IEnumerable<dynamic> split)
@@ -42,31 +41,47 @@ public class Veneers
 
     public void Add(Type veneerType, string name, bool isCompound = false, bool isInternal = false)
     {
+        try
+        {
 #pragma warning disable CS8600
-        Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isCompound, isInternal });
+            Veneer veneer = (Veneer) Activator.CreateInstance(
+                veneerType,
+                new object[] {name, isCompound, isInternal});
 #pragma warning restore CS8600
-#pragma warning disable CS8602
-        veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
-#pragma warning restore CS8602
-        veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
-        veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
-        _wholeVeneers.Add(veneer);
+
+            veneer!.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
+            veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
+            veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
+            _wholeVeneers.Add(veneer);
+        }
+        catch
+        {
+            _logger.Error($"[{Machine.Id}] Unable to add veneer '{veneerType.FullName}'");
+        }
     }
 
     public void AddAcrossSlices(Type veneerType, string name, bool isCompound = false, bool isInternal = false)
     {
         foreach (var key in _slicedVeneers.Keys)
         {
+            try
+            {
 #pragma warning disable CS8600
-            Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isCompound, isInternal });
+                Veneer veneer = (Veneer) Activator.CreateInstance(
+                    veneerType,
+                    new object[] {name, isCompound, isInternal});
 #pragma warning restore CS8600
-#pragma warning disable CS8602
-            veneer.SetSliceKey($"{key}");
-#pragma warning restore CS8602
-            veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
-            veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
-            veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
-            _slicedVeneers[$"{key}"].Add(veneer);
+
+                veneer!.SetSliceKey($"{key}");
+                veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
+                veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
+                veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
+                _slicedVeneers[$"{key}"].Add(veneer);
+            }
+            catch
+            {
+                _logger.Error($"[{Machine.Id}] Unable to add veneer '{veneerType.FullName}' across '{key}' slices");
+            }
         }
     }
     
@@ -74,20 +89,28 @@ public class Veneers
     {
         foreach (var key in _slicedVeneers.Keys)
         {
-            var keyParts = $"{key}".Split(_splitSep);
-            if (keyParts.Length == 1)
-                continue;
-            
+            try
+            {
+                var keyParts = $"{key}".Split(_splitSep);
+                if (keyParts.Length == 1)
+                    continue;
+
 #pragma warning disable CS8600
-            Veneer veneer = (Veneer)Activator.CreateInstance(veneerType, new object[] { name, isCompound, isInternal });
+                Veneer veneer = (Veneer) Activator.CreateInstance(
+                    veneerType,
+                    new object[] {name, isCompound, isInternal});
 #pragma warning restore CS8600
-#pragma warning disable CS8602
-            veneer.SetSliceKey($"{key}");
-#pragma warning restore CS8602
-            veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
-            veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
-            veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
-            _slicedVeneers[$"{key}"].Add(veneer);
+
+                veneer!.SetSliceKey($"{key}");
+                veneer.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
+                veneer.OnChangeAsync = async (v) => await OnDataChangeAsync(this, v);
+                veneer.OnErrorAsync = async (v) => await OnErrorAsync(this, v);
+                _slicedVeneers[$"{key}"].Add(veneer);
+            }
+            catch
+            {
+                _logger.Error($"[{Machine.Id}] Unable to add veneer '{veneerType.FullName}' across '{key}' slices");
+            }
         }
     }
 

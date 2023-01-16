@@ -6,12 +6,8 @@ namespace l99.driver.@base;
 public class Strategy
 {
     protected readonly ILogger Logger;
-    protected readonly Machine machine;
-    
-    public Machine Machine => machine;
-
+    public Machine Machine { get; }
     protected readonly int SweepMs;
-    protected dynamic[] AdditionalParams;
     public bool LastSuccess { get; protected set; }
     public bool IsHealthy { get; protected set; }
 
@@ -20,9 +16,8 @@ public class Strategy
 #pragma warning restore CS8618
     {
         Logger = LogManager.GetLogger(GetType().FullName);
-        this.machine = machine;
-        
-        SweepMs = cfg.type["sweep_ms"];
+        Machine = machine;
+        SweepMs = machine.Configuration.type["sweep_ms"];
     }
 
     public virtual async Task<dynamic?> CreateAsync()
@@ -46,7 +41,7 @@ public class Strategy
         await Task.Delay(delayMs);
         LastSuccess = false;
         await CollectAsync();
-        await machine.Handler.OnStrategySweepCompleteInternalAsync();
+        await Machine.Handler.OnStrategySweepCompleteInternalAsync();
     }
 }
 #pragma warning restore CS1998

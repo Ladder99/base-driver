@@ -7,110 +7,108 @@ public class Veneer
 {
     //TODO: preserve additional_inputs
     
-    protected ILogger Logger;
+    protected readonly ILogger Logger;
     
-    public string Name => name;
-
-    protected readonly string name = "";
+    public string Name { get; }
 
     public bool IsInternal { get; }
 
     public bool IsCompound { get; }
 
-    public dynamic SliceKey => sliceKey;
+    public dynamic SliceKey => _sliceKey!;
 
-    protected dynamic? sliceKey = null;
+    private dynamic? _sliceKey;
     
-    public IEnumerable<dynamic> Marker => marker;
+    public IEnumerable<dynamic> Marker => _marker;
 
-    protected IEnumerable<dynamic> marker;
-    
-    protected bool hasMarker = false;
-    
-    public TimeSpan ArrivalDelta => stopwatchDataArrival.Elapsed;
+    private IEnumerable<dynamic> _marker = null!;
 
-    public dynamic LastArrivedInput => lastArrivedInput;
-
-    protected dynamic lastArrivedInput = new { };
+    private bool _hasMarker;
     
-    public dynamic LastArrivedValue => lastArrivedValue;
+    public TimeSpan ArrivalDelta => _stopwatchDataArrival.Elapsed;
 
-    protected dynamic lastArrivedValue = new { };
-    
-    protected Stopwatch stopwatchDataArrival = new Stopwatch();
-    
-    public dynamic LastChangedInput => lastChangedInput;
+    public dynamic LastArrivedInput => _lastArrivedInput;
 
-    protected dynamic lastChangedInput = new { };
+    private dynamic _lastArrivedInput = new { };
+    
+    public dynamic LastArrivedValue => _lastArrivedValue;
+
+    private dynamic _lastArrivedValue = new { };
+
+    private readonly Stopwatch _stopwatchDataArrival = new();
+    
+    public dynamic LastChangedInput => _lastChangedInput;
+
+    private dynamic _lastChangedInput = new { };
     
     public dynamic LastChangedValue => lastChangedValue;
 
     protected dynamic lastChangedValue = new { };
     
-    public TimeSpan ChangeDelta => stopwatchDataChange.Elapsed;
+    public TimeSpan ChangeDelta => _stopwatchDataChange.Elapsed;
 
-    protected Stopwatch stopwatchDataChange = new Stopwatch();
+    private readonly Stopwatch _stopwatchDataChange = new();
 
-    protected bool isFirstCall = true;
+    private bool _isFirstCall = true;
     
-    public Func<Veneer, Task> OnErrorAsync = async (veneer) => {  };
+    public Func<Veneer, Task> OnErrorAsync = async (veneer) => { await Task.FromResult(0); };
 
-    public Func<Veneer, Task> OnChangeAsync =  async (veneer) => {  };
+    public Func<Veneer, Task> OnChangeAsync =  async (veneer) => { await Task.FromResult(0); };
     
-    public Func<Veneer, Task> OnArrivalAsync =  async (veneer) => {  };
-    
-    public Veneer(string name = "", bool isCompound = false, bool isInternal = false)
+    public Func<Veneer, Task> OnArrivalAsync =  async (veneer) => { await Task.FromResult(0); };
+
+    protected Veneer(string name = "", bool isCompound = false, bool isInternal = false)
     {
         Logger = LogManager.GetLogger(this.GetType().FullName);
-        this.name = name;
+        Name = name;
         IsCompound = isCompound;
         IsInternal = isInternal;
-        stopwatchDataChange.Start();
+        _stopwatchDataChange.Start();
     }
     
     protected async Task OnDataArrivedAsync(dynamic input, dynamic currentValue)
     {
-        Logger.Trace($"[{name}] Veneer arrival invocation result:\n{JObject.FromObject(currentValue).ToString()}");
-        lastArrivedInput = input;
-        lastArrivedValue = currentValue;
+        Logger.Trace($"[{Name}] Veneer arrival invocation result:\n{JObject.FromObject(currentValue).ToString()}");
+        _lastArrivedInput = input;
+        _lastArrivedValue = currentValue;
         await OnArrivalAsync(this);
-        stopwatchDataArrival.Restart();
+        _stopwatchDataArrival.Restart();
     }
     
     protected async Task OnDataChangedAsync(dynamic input, dynamic currentValue)
     {
-        Logger.Trace($"[{name}] Veneer change invocation result:\n{JObject.FromObject(currentValue).ToString()}");
-        lastChangedInput = input;
+        Logger.Trace($"[{Name}] Veneer change invocation result:\n{JObject.FromObject(currentValue).ToString()}");
+        _lastChangedInput = input;
         lastChangedValue = currentValue;
         await OnChangeAsync(this);
-        stopwatchDataChange.Restart();
+        _stopwatchDataChange.Restart();
     }
 
-    protected async Task onErrorAsync(dynamic input)
+    protected async Task OnHandleErrorAsync(dynamic input)
     {
         try
         {
-            Logger.Debug($"[{name}] Veneer error invocation result:\n{JObject.FromObject(input).ToString()}");
+            Logger.Debug($"[{Name}] Veneer error invocation result:\n{JObject.FromObject(input).ToString()}");
         }
         catch
         {
-            Logger.Debug($"[{name}] Veneer error invocation result:\n{input}");
+            Logger.Debug($"[{Name}] Veneer error invocation result:\n{input}");
         }
         
-        lastArrivedInput = input;
+        _lastArrivedInput = input;
         // TODO: overwrite last arrived value?
         await OnErrorAsync(this);
     }
 
     public void SetSliceKey(dynamic? sliceKey)
     {
-        this.sliceKey = sliceKey;
+        _sliceKey = sliceKey;
     }
     
     public void Mark(IEnumerable<dynamic> marker)
     {
-        this.marker = marker;
-        hasMarker = true;
+        _marker = marker;
+        _hasMarker = true;
     }
     
     protected virtual async Task<dynamic> FirstAsync(dynamic input, params dynamic?[] additionalInputs)
@@ -120,15 +118,14 @@ public class Veneer
 
     protected virtual async Task<dynamic> AnyAsync(dynamic input, params dynamic?[] additionalInputs)
     {
-        
-        return new { };
+        return await Task.FromResult(new {});
     }
 
     public async Task<dynamic> PeelAsync(dynamic input, params dynamic?[] additionalInputs)
     {
-        if(isFirstCall)
+        if(_isFirstCall)
         {
-            isFirstCall = false;
+            _isFirstCall = false;
             return await this.FirstAsync(input, additionalInputs);
         }
 

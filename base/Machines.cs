@@ -1,6 +1,7 @@
 ﻿
 // ReSharper disable once CheckNamespace
 namespace l99.driver.@base;
+
 public class Machines
 {
     private readonly ILogger _logger;
@@ -44,11 +45,22 @@ public class Machines
         }
     }
 
-    private Machine Add(dynamic cfg)
+    private Machine? Add(dynamic cfg)
     {
         _logger.Debug($"Adding machine:\n{JObject.FromObject(cfg.machine).ToString()}");
-        var machine = (Machine) Activator.CreateInstance(Type.GetType(cfg.machine.type), new object[] { this, cfg.machine.enabled, cfg.machine.id, cfg });
-        _machines.Add(machine);
+        var machine = (Machine) Activator.CreateInstance(
+            Type.GetType(cfg.machine.type), 
+            new object[] { this, cfg });
+
+        if (machine != null)
+        {
+            _machines.Add(machine);
+        }
+        else
+        {
+            _logger.Error($"Unable to create machine '{cfg.machine.type}'");
+        }
+        
         return machine;
     }
 
@@ -140,9 +152,13 @@ public class Machines
             logger.Trace($"Creating machine from config:\n{JObject.FromObject(cfg).ToString()}");
             
             Machine machine = machines.Add(cfg);
-            await machine.AddTransportAsync(Type.GetType(cfg.machine.transport), cfg);
-            await machine.AddStrategyAsync(Type.GetType(cfg.machine.strategy), cfg);
-            await machine.AddHandlerAsync(Type.GetType(cfg.machine.handler), cfg);
+
+            if (machine != null)
+            {
+                await machine.AddTransportAsync(Type.GetType(cfg.machine.transport), cfg);
+                await machine.AddStrategyAsync(Type.GetType(cfg.machine.strategy), cfg);
+                await machine.AddHandlerAsync(Type.GetType(cfg.machine.handler), cfg);
+            }
         }
 
         return machines;
