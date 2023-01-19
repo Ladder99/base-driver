@@ -105,14 +105,14 @@ public abstract class Machine
     public bool StrategyHealthy => Strategy.IsHealthy;
     public Strategy Strategy { get; private set; } = null!;
 
-    public async Task<Machine> AddStrategyAsync(Type type, dynamic cfg)
+    public async Task<Machine> AddStrategyAsync(Type type, dynamic configuration)
     {
         _logger.Debug($"[{Id}] Creating strategy: {type.FullName}");
 
         try
         {
 #pragma warning disable CS8600, CS8601
-            Strategy = (Strategy) Activator.CreateInstance(type, new object[] {this, cfg});
+            Strategy = (Strategy) Activator.CreateInstance(type, new object[] {this, configuration});
 #pragma warning restore CS8600, CS8601
             
             await Strategy!.CreateAsync();
@@ -202,16 +202,16 @@ public abstract class Machine
         Veneers.AddAcrossSlices(sliceKey, type, name, isCompound, isInternal);
     }
 
-    public async Task<dynamic> PeelVeneerAsync(string name, dynamic input, params dynamic?[] additionalInputs)
+    public async Task<dynamic> PeelVeneerAsync(string name, dynamic[] nativeInputs, dynamic[] additionalInputs)
     {
-        return await Veneers.PeelAsync(name, input, additionalInputs);
+        return await Veneers.PeelAsync(name, nativeInputs, additionalInputs);
     }
     
-    public async Task<dynamic> PeelAcrossVeneerAsync(dynamic split, string name, dynamic input, params dynamic?[] additionalInputs)
+    public async Task<dynamic> PeelAcrossVeneerAsync(dynamic split, string name, dynamic[] nativeInputs, dynamic[] additionalInputs)
     {
-        return await Veneers.PeelAcrossAsync(split, name, input, additionalInputs);
+        return await Veneers.PeelAcrossAsync(split, name, nativeInputs, additionalInputs);
     }
-
+    
     public void MarkVeneer(dynamic split, IEnumerable<dynamic> marker)
     {
         Veneers.Mark(split, marker);

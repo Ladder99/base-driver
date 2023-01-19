@@ -64,7 +64,7 @@ public class Machines
         return machine;
     }
 
-    public async Task RunAsync()
+    public async Task RunAsync(CancellationToken stoppingToken)
     {
         List<Task> tasks = new List<Task>();
 
@@ -74,7 +74,9 @@ public class Machines
         }
         
         _logger.Info("Machine tasks running...");
-        await Task.WhenAll(tasks);
+        
+        await Task.WhenAny(Task.WhenAll(tasks), Task.Delay(Timeout.Infinite, stoppingToken));
+        _logger.Info("Machine tasks stopping...");
     }
 
     async Task RunMachineAsync(Machine machine)
@@ -110,6 +112,7 @@ public class Machines
 
         foreach (dynamic machineConf in config["machines"])
         {
+            // extract primary types as strings from each machine configuration
             var prebuiltConfig = new
             {
                 machine = new {
@@ -122,6 +125,7 @@ public class Machines
                 }
             };
 
+            // iterate previously identified primary type strings and extract each section
             var builtConfig = new
             {
                 prebuiltConfig.machine,
@@ -131,6 +135,7 @@ public class Machines
                 strategy = machineConf.ContainsKey(prebuiltConfig.machine.strategy)
                     ? machineConf[prebuiltConfig.machine.strategy]
                     : null,
+                collectors = new Dictionary<string, object>(),
                 handler = machineConf.ContainsKey(prebuiltConfig.machine.handler)
                     ? machineConf[prebuiltConfig.machine.handler]
                     : null,
@@ -138,6 +143,18 @@ public class Machines
                     ? machineConf[prebuiltConfig.machine.transport]
                     : null
             };
+
+            // iterate strategy collector string types and extract section for each collector
+            if (builtConfig.strategy != null)
+            {
+                foreach (var collectorType in builtConfig.strategy["collectors"])
+                {
+                    if(machineConf.ContainsKey(collectorType))
+                    {
+                        builtConfig.collectors.Add(collectorType, machineConf[collectorType]);
+                    }
+                }
+            }
 
             // ReSharper disable once RedundantToStringCall
             logger.Trace($"Machine configuration built:\n{JObject.FromObject(builtConfig).ToString()}");

@@ -114,14 +114,14 @@ public class Veneers
         }
     }
 
-    public async Task<dynamic> PeelAsync(string name, dynamic input, params dynamic?[] additionalInputs)
+    public async Task<dynamic> PeelAsync(string name, dynamic[] nativeInputs, dynamic[] additionalInputs)
     {
         return await _wholeVeneers
             .FirstOrDefault(v => v.Name == name)
-            ?.PeelAsync(input, additionalInputs)!;
+            ?.PeelAsync(nativeInputs, additionalInputs)!;
     }
     
-    public async Task<dynamic> PeelAcrossAsync(dynamic split, string name, dynamic input, params dynamic?[] additionalInputs)
+    public async Task<dynamic> PeelAcrossAsync(dynamic split, string name, dynamic[] nativeInputs, dynamic[] additionalInputs)
     {
         foreach (var key in _slicedVeneers.Keys)
         {
@@ -133,7 +133,7 @@ public class Veneers
                 {
                     if (veneer.Name == name)
                     {
-                        return await veneer.PeelAsync(input, additionalInputs);
+                        return await veneer.PeelAsync(nativeInputs, additionalInputs);
                     }
                 }
             }
