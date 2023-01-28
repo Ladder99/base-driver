@@ -6,6 +6,8 @@ namespace l99.driver.@base;
 public class Veneer
 {
     protected readonly ILogger Logger;
+
+    protected readonly Veneers Veneers;
     
     public string Name { get; }
     
@@ -47,9 +49,10 @@ public class Veneer
 
     public dynamic LastChangedValue { get; protected set; } = null!;
     
-    protected Veneer(string name = "", bool isCompound = false, bool isInternal = false)
+    protected Veneer(Veneers veneers, string name = "", bool isCompound = false, bool isInternal = false)
     {
         Logger = LogManager.GetLogger(this.GetType().FullName);
+        Veneers = veneers;
         Name = name;
         IsCompound = isCompound;
         IsInternal = isInternal;

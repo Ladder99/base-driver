@@ -13,7 +13,6 @@ public abstract class Machine
     }
     
     public virtual dynamic Info => new { _id = Id };
-    // ReSharper disable once NotAccessedField.Local
     private Machines _machines;
     public bool Enabled => Configuration.machine.enabled;
     public string Id => Configuration.machine.id;

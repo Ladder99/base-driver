@@ -1,4 +1,3 @@
-// ReSharper disable VirtualMemberNeverOverridden.Global
 #pragma warning disable CS1998
 
 // ReSharper disable once CheckNamespace
@@ -6,14 +5,12 @@ namespace l99.driver.@base;
 
 public class Handler
 {
-    // ReSharper disable once NotAccessedField.Local
-    private ILogger _logger;
+    protected readonly ILogger Logger;
     public Machine Machine { get; }
 
-    // ReSharper disable once UnusedParameter.Local
     protected Handler(Machine machine, dynamic cfg)
     {
-        _logger = LogManager.GetLogger(GetType().FullName);
+        Logger = LogManager.GetLogger(GetType().FullName);
         Machine = machine;
     }
     
@@ -125,4 +122,3 @@ public class Handler
         
     }
 }
-#pragma warning restore CS1998

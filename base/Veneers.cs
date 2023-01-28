@@ -1,6 +1,5 @@
 ﻿#pragma warning disable CS1998
 
-// ReSharper disable UnusedParameter.Local
 // ReSharper disable once CheckNamespace
 namespace l99.driver.@base;
 
@@ -46,7 +45,7 @@ public class Veneers
 #pragma warning disable CS8600
             Veneer veneer = (Veneer) Activator.CreateInstance(
                 veneerType,
-                new object[] {name, isCompound, isInternal});
+                new object[] {this, name, isCompound, isInternal});
 #pragma warning restore CS8600
 
             veneer!.OnArrivalAsync = async (v) => await OnDataArrivalAsync(this, v);
@@ -69,7 +68,7 @@ public class Veneers
 #pragma warning disable CS8600
                 Veneer veneer = (Veneer) Activator.CreateInstance(
                     veneerType,
-                    new object[] {name, isCompound, isInternal});
+                    new object[] {this, name, isCompound, isInternal});
 #pragma warning restore CS8600
 
                 veneer!.SetSliceKey($"{key}");
@@ -98,7 +97,7 @@ public class Veneers
 #pragma warning disable CS8600
                 Veneer veneer = (Veneer) Activator.CreateInstance(
                     veneerType,
-                    new object[] {name, isCompound, isInternal});
+                    new object[] {this, name, isCompound, isInternal});
 #pragma warning restore CS8600
 
                 veneer!.SetSliceKey($"{key}");
@@ -159,4 +158,3 @@ public class Veneers
         }
     }
 }
-#pragma warning restore CS1998

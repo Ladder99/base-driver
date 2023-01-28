@@ -1,5 +1,3 @@
-#pragma warning disable CS1998
-
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using YamlDotNet.Core;
@@ -75,4 +73,3 @@ public class Bootstrap
         return config;
     }
 }
-#pragma warning restore CS1998

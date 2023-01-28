@@ -11,9 +11,7 @@ public class Strategy
     public bool LastSuccess { get; protected set; }
     public bool IsHealthy { get; protected set; }
 
-#pragma warning disable CS8618
     protected Strategy(Machine machine, dynamic cfg)
-#pragma warning restore CS8618
     {
         Logger = LogManager.GetLogger(GetType().FullName);
         Machine = machine;
@@ -44,4 +42,3 @@ public class Strategy
         await Machine.Handler.OnStrategySweepCompleteInternalAsync();
     }
 }
-#pragma warning restore CS1998
