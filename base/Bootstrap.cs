@@ -1,5 +1,6 @@
 using System.IO;
 using Microsoft.Extensions.Configuration;
+using NLog.Config;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -16,14 +17,14 @@ public class Bootstrap
     {
         LogManager.Shutdown();
     }
-    
+
     public static async Task<dynamic> Start(string[] args)
     {
         DetectArch();
-        string nlogFile = GetArgument(args, "--nlog", "nlog.config");
+        var nlogFile = GetArgument(args, "--nlog", "nlog.config");
         _logger = SetupLogger(nlogFile);
-        string configFiles = GetArgument(args, "--config", "config.system.yml,config.user.yml,config.machines.yml");
-        dynamic config = ReadConfig(configFiles.Split(','));
+        var configFiles = GetArgument(args, "--config", "config.system.yml,config.user.yml,config.machines.yml");
+        var config = ReadConfig(configFiles.Split(','));
         return config;
     }
 
@@ -42,7 +43,7 @@ public class Bootstrap
 
     private static Logger SetupLogger(string configFile)
     {
-        LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(configFile);
+        LogManager.Configuration = new XmlLoggingConfiguration(configFile);
 
         var config = new ConfigurationBuilder().Build();
 
@@ -54,22 +55,20 @@ public class Bootstrap
     private static dynamic ReadConfig(string[] configFiles)
     {
         var yaml = "";
-        foreach (var configFile in configFiles)
-        {
-            yaml += File.ReadAllText(configFile);
-        }
+        foreach (var configFile in configFiles) yaml += File.ReadAllText(configFile);
 
         var stringReader = new StringReader(yaml);
         var parser = new Parser(stringReader);
         var mergingParser = new MergingParser(parser);
-        
+
         var deserializer = new DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .Build();
 
         var config = deserializer.Deserialize(mergingParser);
-        
-        _logger.Trace($"Deserialized configuration:\n{JObject.FromObject(config ?? throw new InvalidOperationException("Configuration cannot be null."))}");
+
+        _logger.Trace(
+            $"Deserialized configuration:\n{JObject.FromObject(config ?? throw new InvalidOperationException("Configuration cannot be null."))}");
         return config;
     }
 }

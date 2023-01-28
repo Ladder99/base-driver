@@ -1,23 +1,12 @@
-﻿
-// ReSharper disable once CheckNamespace
+﻿// ReSharper disable once CheckNamespace
+
 namespace l99.driver.@base;
 
 public abstract class Machine
 {
     private readonly ILogger _logger;
-    public dynamic Configuration { get; }
-    
-    public override string ToString()
-    {
-        return new {Id}.ToString()!;
-    }
-    
-    public virtual dynamic Info => new { _id = Id };
     private Machines _machines;
-    public bool Enabled => Configuration.machine.enabled;
-    public string Id => Configuration.machine.id;
-    public bool IsRunning { get; private set; } = true;
-    
+
     protected Machine(Machines machines, object config)
     {
         Configuration = config;
@@ -28,27 +17,34 @@ public abstract class Machine
         _propertyBag = new Dictionary<string, dynamic>();
     }
 
+    public dynamic Configuration { get; }
+
+    public virtual dynamic Info => new {_id = Id};
+    public bool Enabled => Configuration.machine.enabled;
+    public string Id => Configuration.machine.id;
+    public bool IsRunning { get; private set; } = true;
+
+    public override string ToString()
+    {
+        return new {Id}.ToString()!;
+    }
+
     public void Shutdown()
     {
         IsRunning = false;
     }
 
     #region property-bag
-    
+
     private readonly Dictionary<string, dynamic> _propertyBag;
-    
+
     public dynamic? this[string propertyBagKey]
     {
         get
         {
             if (_propertyBag.ContainsKey(propertyBagKey))
-            {
                 return _propertyBag[propertyBagKey];
-            }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         // ReSharper disable once PropertyCanBeMadeInitOnly.Global
@@ -66,9 +62,9 @@ public abstract class Machine
             }
         }
     }
-    
+
     #endregion
-    
+
     #region handler
 
     public Handler Handler { get; private set; } = null!;
@@ -95,11 +91,11 @@ public abstract class Machine
 
         return this;
     }
-    
+
     #endregion
-    
+
     #region strategy
-    
+
     public bool StrategySuccess => Strategy.LastSuccess;
     public bool StrategyHealthy => Strategy.IsHealthy;
     public Strategy Strategy { get; private set; } = null!;
@@ -113,7 +109,7 @@ public abstract class Machine
 #pragma warning disable CS8600, CS8601
             Strategy = (Strategy) Activator.CreateInstance(type, new object[] {this, configuration});
 #pragma warning restore CS8600, CS8601
-            
+
             await Strategy!.CreateAsync();
         }
         catch
@@ -134,11 +130,11 @@ public abstract class Machine
     {
         await Strategy.SweepAsync();
     }
-    
+
     #endregion
-    
+
     #region transport
-    
+
     public Transport Transport { get; private set; } = null!;
 
     public async Task<Machine> AddTransportAsync(Type type, dynamic cfg)
@@ -150,28 +146,24 @@ public abstract class Machine
 #pragma warning disable CS8600, CS8601
             Transport = (Transport) Activator.CreateInstance(type, new object[] {this, cfg});
 #pragma warning restore CS8600, CS8601
-            
+
             await Transport!.CreateAsync();
         }
         catch
         {
             _logger.Error($"[{Id}] Unable to add transport: {type.FullName}");
         }
-        
+
         return this;
     }
-    
+
     #endregion
-    
+
     #region veneeers
-    
+
     public Veneers Veneers { get; }
 
-    public bool VeneersApplied
-    {
-        get; 
-        set;
-    }
+    public bool VeneersApplied { get; set; }
 
     public void ApplyVeneer(Type type, string name, bool isCompound = false, bool isInternal = false)
     {
@@ -183,7 +175,7 @@ public abstract class Machine
     {
         Veneers.Slice(split);
     }
-    
+
     public void SliceVeneer(dynamic sliceKey, IEnumerable<dynamic> split)
     {
         Veneers.Slice(sliceKey, split);
@@ -194,8 +186,9 @@ public abstract class Machine
         _logger.Debug($"[{Id}] Applying veneer: {type.FullName}");
         Veneers.AddAcrossSlices(type, name, isCompound, isInternal);
     }
-    
-    public void ApplyVeneerAcrossSlices(dynamic sliceKey, Type type, string name, bool isCompound = false, bool isInternal = false)
+
+    public void ApplyVeneerAcrossSlices(dynamic sliceKey, Type type, string name, bool isCompound = false,
+        bool isInternal = false)
     {
         _logger.Debug($"[{Id}] Applying veneer: {type.FullName}");
         Veneers.AddAcrossSlices(sliceKey, type, name, isCompound, isInternal);
@@ -205,16 +198,17 @@ public abstract class Machine
     {
         return await Veneers.PeelAsync(name, nativeInputs, additionalInputs);
     }
-    
-    public async Task<dynamic> PeelAcrossVeneerAsync(dynamic split, string name, dynamic[] nativeInputs, dynamic[] additionalInputs)
+
+    public async Task<dynamic> PeelAcrossVeneerAsync(dynamic split, string name, dynamic[] nativeInputs,
+        dynamic[] additionalInputs)
     {
         return await Veneers.PeelAcrossAsync(split, name, nativeInputs, additionalInputs);
     }
-    
+
     public void MarkVeneer(dynamic split, IEnumerable<dynamic> marker)
     {
         Veneers.Mark(split, marker);
     }
-    
+
     #endregion
 }

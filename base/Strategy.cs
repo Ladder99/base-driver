@@ -6,10 +6,7 @@ namespace l99.driver.@base;
 public class Strategy
 {
     protected readonly ILogger Logger;
-    public Machine Machine { get; }
     protected readonly int SweepMs;
-    public bool LastSuccess { get; protected set; }
-    public bool IsHealthy { get; protected set; }
 
     protected Strategy(Machine machine, dynamic cfg)
     {
@@ -18,11 +15,15 @@ public class Strategy
         SweepMs = machine.Configuration.type["sweep_ms"];
     }
 
+    public Machine Machine { get; }
+    public bool LastSuccess { get; protected set; }
+    public bool IsHealthy { get; protected set; }
+
     public virtual async Task<dynamic?> CreateAsync()
     {
         return null;
     }
-    
+
     public virtual async Task<dynamic?> InitializeAsync()
     {
         return null;
