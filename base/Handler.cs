@@ -7,7 +7,7 @@ public class Handler
 {
     protected readonly ILogger Logger;
 
-    protected Handler(Machine machine, dynamic cfg)
+    protected Handler(Machine machine)
     {
         Logger = LogManager.GetLogger(GetType().FullName);
         Machine = machine;

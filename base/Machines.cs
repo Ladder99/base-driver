@@ -160,9 +160,21 @@ public class Machines
 
             if (machine != null)
             {
-                await machine.AddTransportAsync(Type.GetType(cfg.machine.transport), cfg);
-                await machine.AddStrategyAsync(Type.GetType(cfg.machine.strategy), cfg);
-                await machine.AddHandlerAsync(Type.GetType(cfg.machine.handler), cfg);
+                try
+                {
+                    Type transportType = Type.GetType(cfg.machine.transport);
+                    Type strategyType = Type.GetType(cfg.machine.strategy);
+                    Type handlerType = Type.GetType(cfg.machine.handler);
+                
+                    await machine.AddTransportAsync(transportType);
+                    await machine.AddStrategyAsync(strategyType);
+                    await machine.AddHandlerAsync(handlerType);
+                }
+                catch (Exception e)
+                {
+                    logger.Error($"[{machine.Id}] Failed to create");
+                    machine.Disable();
+                }
             }
         }
 

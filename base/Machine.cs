@@ -7,9 +7,10 @@ public abstract class Machine
     private readonly ILogger _logger;
     private Machines _machines;
 
-    protected Machine(Machines machines, object config)
+    protected Machine(Machines machines, object configuration)
     {
-        Configuration = config;
+        Configuration = configuration;
+        Enabled = Configuration.machine.enabled;
         _logger = LogManager.GetCurrentClassLogger();
         _logger.Debug($"[{Id}] Creating machine, enabled: {Enabled}");
         _machines = machines;
@@ -20,13 +21,19 @@ public abstract class Machine
     public dynamic Configuration { get; }
 
     public virtual dynamic Info => new {_id = Id};
-    public bool Enabled => Configuration.machine.enabled;
+    public bool Enabled { get; private set; }
+
     public string Id => Configuration.machine.id;
     public bool IsRunning { get; private set; } = true;
 
     public override string ToString()
     {
         return new {Id}.ToString()!;
+    }
+
+    public void Disable()
+    {
+        Enabled = false;
     }
 
     public void Shutdown()
@@ -69,14 +76,14 @@ public abstract class Machine
 
     public Handler Handler { get; private set; } = null!;
 
-    public async Task<Machine> AddHandlerAsync(Type type, dynamic cfg)
+    public async Task<Machine> AddHandlerAsync(Type type)
     {
         _logger.Debug($"[{Id}] Creating handler: {type.FullName}");
 
         try
         {
 #pragma warning disable CS8600, CS8601
-            Handler = (Handler) Activator.CreateInstance(type, new object[] {this, cfg});
+            Handler = (Handler) Activator.CreateInstance(type, this);
 #pragma warning restore CS8600, CS8601
 
             await Handler!.CreateAsync();
@@ -100,14 +107,14 @@ public abstract class Machine
     public bool StrategyHealthy => Strategy.IsHealthy;
     public Strategy Strategy { get; private set; } = null!;
 
-    public async Task<Machine> AddStrategyAsync(Type type, dynamic configuration)
+    public async Task<Machine> AddStrategyAsync(Type type)
     {
         _logger.Debug($"[{Id}] Creating strategy: {type.FullName}");
 
         try
         {
 #pragma warning disable CS8600, CS8601
-            Strategy = (Strategy) Activator.CreateInstance(type, new object[] {this, configuration});
+            Strategy = (Strategy) Activator.CreateInstance(type, this);
 #pragma warning restore CS8600, CS8601
 
             await Strategy!.CreateAsync();
@@ -137,14 +144,14 @@ public abstract class Machine
 
     public Transport Transport { get; private set; } = null!;
 
-    public async Task<Machine> AddTransportAsync(Type type, dynamic cfg)
+    public async Task<Machine> AddTransportAsync(Type type)
     {
         _logger.Debug($"[{Id}] Creating transport: {type.FullName}");
 
         try
         {
 #pragma warning disable CS8600, CS8601
-            Transport = (Transport) Activator.CreateInstance(type, new object[] {this, cfg});
+            Transport = (Transport) Activator.CreateInstance(type, this);
 #pragma warning restore CS8600, CS8601
 
             await Transport!.CreateAsync();

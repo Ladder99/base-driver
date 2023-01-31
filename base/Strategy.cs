@@ -8,7 +8,7 @@ public class Strategy
     protected readonly ILogger Logger;
     protected readonly int SweepMs;
 
-    protected Strategy(Machine machine, dynamic cfg)
+    protected Strategy(Machine machine)
     {
         Logger = LogManager.GetLogger(GetType().FullName);
         Machine = machine;

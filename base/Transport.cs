@@ -8,7 +8,7 @@ public class Transport
     protected readonly ILogger Logger;
 
     // ReSharper disable once UnusedParameter.Local
-    protected Transport(Machine machine, dynamic cfg)
+    protected Transport(Machine machine)
     {
         Logger = LogManager.GetLogger(GetType().FullName);
         Machine = machine;
