@@ -1,18 +1,17 @@
 ﻿// ReSharper disable once CheckNamespace
-
 namespace l99.driver.@base;
 
 public abstract class Machine
 {
-    private readonly ILogger _logger;
+    protected readonly ILogger Logger;
     private Machines _machines;
 
     protected Machine(Machines machines, object configuration)
     {
         Configuration = configuration;
         Enabled = Configuration.machine.enabled;
-        _logger = LogManager.GetCurrentClassLogger();
-        _logger.Debug($"[{Id}] Creating machine, enabled: {Enabled}");
+        Logger = LogManager.GetCurrentClassLogger();
+        Logger.Debug($"[{Id}] Creating machine, enabled: {Enabled}");
         _machines = machines;
         Veneers = new Veneers(this);
         _propertyBag = new Dictionary<string, dynamic>();
@@ -64,7 +63,7 @@ public abstract class Machine
             }
             else
             {
-                _logger.Debug($"[{Id}] Adding '{propertyBagKey}' to property bag.");
+                Logger.Debug($"[{Id}] Adding '{propertyBagKey}' to property bag.");
                 _propertyBag.Add(propertyBagKey, value);
             }
         }
@@ -78,7 +77,7 @@ public abstract class Machine
 
     public async Task<Machine> AddHandlerAsync(Type type)
     {
-        _logger.Debug($"[{Id}] Creating handler: {type.FullName}");
+        Logger.Debug($"[{Id}] Creating handler: {type.FullName}");
 
         try
         {
@@ -93,7 +92,7 @@ public abstract class Machine
         }
         catch
         {
-            _logger.Error($"[{Id}] Unable to add handler: {type.FullName}");
+            Logger.Error($"[{Id}] Unable to add handler: {type.FullName}");
         }
 
         return this;
@@ -109,7 +108,7 @@ public abstract class Machine
 
     public async Task<Machine> AddStrategyAsync(Type type)
     {
-        _logger.Debug($"[{Id}] Creating strategy: {type.FullName}");
+        Logger.Debug($"[{Id}] Creating strategy: {type.FullName}");
 
         try
         {
@@ -121,7 +120,7 @@ public abstract class Machine
         }
         catch
         {
-            _logger.Error($"[{Id}] Unable to add strategy: {type.FullName}");
+            Logger.Error($"[{Id}] Unable to add strategy: {type.FullName}");
         }
 
         return this;
@@ -129,7 +128,7 @@ public abstract class Machine
 
     public async Task InitStrategyAsync()
     {
-        _logger.Debug($"[{Id}] Initializing strategy...");
+        Logger.Debug($"[{Id}] Initializing strategy...");
         await Strategy.InitializeAsync();
     }
 
@@ -146,7 +145,7 @@ public abstract class Machine
 
     public async Task<Machine> AddTransportAsync(Type type)
     {
-        _logger.Debug($"[{Id}] Creating transport: {type.FullName}");
+        Logger.Debug($"[{Id}] Creating transport: {type.FullName}");
 
         try
         {
@@ -158,7 +157,7 @@ public abstract class Machine
         }
         catch
         {
-            _logger.Error($"[{Id}] Unable to add transport: {type.FullName}");
+            Logger.Error($"[{Id}] Unable to add transport: {type.FullName}");
         }
 
         return this;
@@ -174,7 +173,7 @@ public abstract class Machine
 
     public void ApplyVeneer(Type type, string name, bool isCompound = false, bool isInternal = false)
     {
-        _logger.Debug($"[{Id}] Applying veneer: {type.FullName}");
+        Logger.Debug($"[{Id}] Applying veneer: {type.FullName}");
         Veneers.Add(type, name, isCompound, isInternal);
     }
 
@@ -190,14 +189,14 @@ public abstract class Machine
 
     public void ApplyVeneerAcrossSlices(Type type, string name, bool isCompound = false, bool isInternal = false)
     {
-        _logger.Debug($"[{Id}] Applying veneer: {type.FullName}");
+        Logger.Debug($"[{Id}] Applying veneer: {type.FullName}");
         Veneers.AddAcrossSlices(type, name, isCompound, isInternal);
     }
 
     public void ApplyVeneerAcrossSlices(dynamic sliceKey, Type type, string name, bool isCompound = false,
         bool isInternal = false)
     {
-        _logger.Debug($"[{Id}] Applying veneer: {type.FullName}");
+        Logger.Debug($"[{Id}] Applying veneer: {type.FullName}");
         Veneers.AddAcrossSlices(sliceKey, type, name, isCompound, isInternal);
     }
 

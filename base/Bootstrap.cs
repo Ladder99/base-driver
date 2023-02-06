@@ -67,8 +67,8 @@ public class Bootstrap
 
         var config = deserializer.Deserialize(mergingParser);
 
-        _logger.Trace(
-            $"Deserialized configuration:\n{JObject.FromObject(config ?? throw new InvalidOperationException("Configuration cannot be null."))}");
+        _logger.Trace($"Deserialized configuration:\n{JObject.FromObject(config ?? throw new InvalidOperationException("Configuration cannot be null."))}");
+        
         return config;
     }
 }

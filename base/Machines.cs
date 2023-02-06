@@ -1,5 +1,4 @@
 ﻿// ReSharper disable once CheckNamespace
-
 namespace l99.driver.@base;
 
 public class Machines
@@ -40,19 +39,22 @@ public class Machines
         }
     }
 
-    private Machine? Add(dynamic cfg)
+    private Machine? Add(dynamic configuration)
     {
-        _logger.Debug($"Adding machine:\n{JObject.FromObject(cfg.machine).ToString()}");
-        var machine = (Machine) Activator.CreateInstance(
-            Type.GetType(cfg.machine.type),
-            new object[] {this, cfg});
+        _logger.Debug($"Adding machine:\n{JObject.FromObject(configuration.machine).ToString()}");
 
-        if (machine != null)
+        try
+        {
+            Type machineType = Type.GetType(configuration.machine.type);
+            Machine machine = (Machine) Activator.CreateInstance(machineType, new object[] {this, configuration})!;
             _machines.Add(machine);
-        else
-            _logger.Error($"Unable to create machine '{cfg.machine.type}'");
-
-        return machine;
+            return machine;
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"[{configuration.machine.Id}] Failed to add machine");
+            return null;
+        }
     }
 
     public async Task RunAsync(CancellationToken stoppingToken)
@@ -61,10 +63,10 @@ public class Machines
 
         foreach (var machine in _machines.Where(x => x.Enabled)) tasks.Add(RunMachineAsync(machine));
 
-        _logger.Info("Machine tasks running...");
+        _logger.Info("Machine tasks running");
 
         await Task.WhenAny(Task.WhenAll(tasks), Task.Delay(Timeout.Infinite, stoppingToken));
-        _logger.Info("Machine tasks stopping...");
+        _logger.Info("Machine tasks stopping");
     }
 
     private async Task RunMachineAsync(Machine machine)
@@ -77,14 +79,14 @@ public class Machines
     // ReSharper disable once UnusedMember.Local
     private void ShutdownAll()
     {
-        _logger.Info("All machine tasks stopping...");
+        _logger.Info("All machine tasks stopping");
         _isRunning = false;
     }
 
     // ReSharper disable once UnusedMember.Local
     private void Shutdown(string machineId)
     {
-        _logger.Info($"Machine '{machineId}' tasks stopping...");
+        _logger.Info($"Machine '{machineId}' tasks stopping");
         _machines.FirstOrDefault(m => m.Id == machineId)?.Shutdown();
     }
 
@@ -102,11 +104,11 @@ public class Machines
             {
                 machine = new
                 {
+                    id = machineConf.ContainsKey("id") ? machineConf["id"] : Guid.NewGuid().ToString(),
                     enabled = machineConf.ContainsKey("enabled") ? machineConf["enabled"] : false,
                     type = machineConf.ContainsKey("type")
                         ? machineConf["type"]
                         : $"l99.driver.@base.Machine, {assemblyName}",
-                    id = machineConf.ContainsKey("id") ? machineConf["id"] : Guid.NewGuid().ToString(),
                     strategy = machineConf.ContainsKey("strategy")
                         ? machineConf["strategy"]
                         : $"l99.driver.@base.Strategy, {assemblyName}",
@@ -119,25 +121,27 @@ public class Machines
                 }
             };
 
+            // TODO: 'collectors' is not base impl, move to Fanuc
             // iterate previously identified primary type strings and extract each section
             var builtConfig = new
             {
                 prebuiltConfig.machine,
                 type = machineConf.ContainsKey(prebuiltConfig.machine.type)
                     ? machineConf[prebuiltConfig.machine.type]
-                    : null,
+                    : new Dictionary<object, object>(),
                 strategy = machineConf.ContainsKey(prebuiltConfig.machine.strategy)
                     ? machineConf[prebuiltConfig.machine.strategy]
-                    : null,
-                collectors = new Dictionary<string, object>(),
+                    : new Dictionary<object, object>(),
                 handler = machineConf.ContainsKey(prebuiltConfig.machine.handler)
                     ? machineConf[prebuiltConfig.machine.handler]
-                    : null,
+                    : new Dictionary<object, object>(),
                 transport = machineConf.ContainsKey(prebuiltConfig.machine.transport)
                     ? machineConf[prebuiltConfig.machine.transport]
-                    : null
+                    : new Dictionary<object, object>(),
+                collectors = new Dictionary<string, object>()
             };
 
+            // TODO: not base impl, move to Fanuc
             // iterate strategy collector string types and extract section for each collector
             if (builtConfig.strategy != null)
                 foreach (var collectorType in builtConfig.strategy["collectors"])
@@ -172,7 +176,7 @@ public class Machines
                 }
                 catch (Exception e)
                 {
-                    logger.Error($"[{machine.Id}] Failed to create");
+                    logger.Error($"[{machine.Id}] Failed to create machine");
                     machine.Disable();
                 }
             }
