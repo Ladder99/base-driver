@@ -1,4 +1,7 @@
 ﻿// ReSharper disable once CheckNamespace
+
+using System.Diagnostics;
+
 namespace l99.driver.@base;
 
 public abstract class Machine
@@ -23,7 +26,6 @@ public abstract class Machine
     public bool Enabled { get; private set; }
 
     public string Id => Configuration.machine.id;
-    public bool IsRunning { get; private set; } = true;
 
     public override string ToString()
     {
@@ -35,11 +37,11 @@ public abstract class Machine
         Enabled = false;
     }
 
-    public void Shutdown()
+    public virtual async Task Stop()
     {
-        IsRunning = false;
+        
     }
-
+    
     #region property-bag
 
     private readonly Dictionary<string, dynamic> _propertyBag;

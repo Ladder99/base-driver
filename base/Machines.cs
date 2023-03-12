@@ -6,7 +6,6 @@ public class Machines
     private readonly ILogger _logger;
     private readonly List<Machine> _machines;
     private readonly Dictionary<string, dynamic> _propertyBag;
-    private bool _isRunning = true;
 
     private Machines()
     {
@@ -41,6 +40,13 @@ public class Machines
 
     private Machine? Add(dynamic configuration)
     {
+        // prevent creating disabled machines
+        if (configuration.machine.enabled == false)
+        {
+            _logger.Info($"[{configuration.machine.id}] Machine disabled and will not be added");
+            return null;
+        }
+        
         _logger.Debug($"Adding machine:\n{JObject.FromObject(configuration.machine).ToString()}");
 
         try
@@ -52,7 +58,7 @@ public class Machines
         }
         catch (Exception e)
         {
-            _logger.Error($"[{configuration.machine.Id}] Failed to add machine");
+            _logger.Error($"[{configuration.machine.id}] Failed to add machine");
             return null;
         }
     }
@@ -61,33 +67,37 @@ public class Machines
     {
         var tasks = new List<Task>();
 
-        foreach (var machine in _machines.Where(x => x.Enabled)) tasks.Add(RunMachineAsync(machine));
+        foreach (var machine in _machines.Where(x => x.Enabled))
+        {
+            tasks.Add(Task.Run(async () =>
+            {
+                await RunMachineAsync(machine, stoppingToken);
+            }, stoppingToken));
+        }
 
         _logger.Info("Machine tasks running");
 
-        await Task.WhenAny(Task.WhenAll(tasks), Task.Delay(Timeout.Infinite, stoppingToken));
-        _logger.Info("Machine tasks stopping");
+        await Task.WhenAll(tasks);
+        
+        _logger.Info("Machine tasks stopped");
     }
 
-    private async Task RunMachineAsync(Machine machine)
+    private async Task RunMachineAsync(Machine machine, CancellationToken stoppingToken)
     {
+        // TODO: shutdown cannot complete until strategy is initialized
         await machine.InitStrategyAsync();
 
-        while (_isRunning && machine.IsRunning) await machine.RunStrategyAsync();
-    }
+        // continue running until stop is requested
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await machine.RunStrategyAsync();
+        }
 
-    // ReSharper disable once UnusedMember.Local
-    private void ShutdownAll()
-    {
-        _logger.Info("All machine tasks stopping");
-        _isRunning = false;
-    }
-
-    // ReSharper disable once UnusedMember.Local
-    private void Shutdown(string machineId)
-    {
-        _logger.Info($"Machine '{machineId}' tasks stopping");
-        _machines.FirstOrDefault(m => m.Id == machineId)?.Shutdown();
+        _logger.Info($"[{machine.Id}] Machine task stopping");
+        
+        await machine.Stop();
+        
+        _logger.Info($"[{machine.Id}] Machine task stopped");
     }
 
     public static async Task<Machines> CreateMachines(dynamic config)
